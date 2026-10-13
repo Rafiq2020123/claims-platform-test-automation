@@ -35,7 +35,7 @@ const DECISION_TO_STATUS = { APPROVE: 'APPROVED', DENY: 'DENIED', PEND: 'PENDED'
 export const claimRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Body: NewClaim }>(
     '/claims',
-    { schema: { body: { type: 'object' } } },
+    { config: { roles: ['member'] }, schema: { body: { type: 'object' } } },
     async (request, reply) => {
       const session = requireRole(request, 'member');
 
@@ -79,7 +79,7 @@ export const claimRoutes: FastifyPluginAsync = async (app) => {
     },
   );
 
-  app.get('/claims', async (request) => {
+  app.get('/claims', { config: { roles: ['member', 'adjuster'] } }, async (request) => {
     const session = requireRole(request, 'member', 'adjuster');
     const { rows } =
       session.role === 'member'
@@ -91,14 +91,19 @@ export const claimRoutes: FastifyPluginAsync = async (app) => {
     return rows;
   });
 
-  app.get<{ Params: { id: string } }>('/claims/:id', async (request) => {
-    const session = requireRole(request, 'member', 'adjuster');
-    return findVisibleClaim(app.db, request.params.id, session);
-  });
+  app.get<{ Params: { id: string } }>(
+    '/claims/:id',
+    { config: { roles: ['member', 'adjuster'] } },
+    async (request) => {
+      const session = requireRole(request, 'member', 'adjuster');
+      return findVisibleClaim(app.db, request.params.id, session);
+    },
+  );
 
   app.post<{ Params: { id: string }; Body: Decision }>(
     '/claims/:id/decision',
     {
+      config: { roles: ['adjuster'] },
       schema: {
         body: {
           type: 'object',
@@ -147,9 +152,10 @@ export const claimRoutes: FastifyPluginAsync = async (app) => {
         }
 
         const { rows } = await client.query(
-          `UPDATE claims SET status = $2, approved_cents = $3, denial_reason = $4, updated_at = now()
+          `UPDATE claims SET status = $2, approved_cents = $3, denial_reason = $4,
+                             correlation_id = $5, updated_at = now()
            WHERE id = $1 RETURNING ${CLAIM_COLUMNS}`,
-          [claim.id, target, approvedCents, denialReason],
+          [claim.id, target, approvedCents, denialReason, request.id],
         );
         await recordStatusChange(client, claim.id, claim.status, target, session, request.id);
         return rows[0];

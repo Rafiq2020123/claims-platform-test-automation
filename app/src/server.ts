@@ -20,6 +20,11 @@ declare module 'fastify' {
   interface FastifyRequest {
     session: Session | null;
   }
+  interface FastifyContextConfig {
+    // Roles allowed on this route. Checked in onRequest, before the body is parsed or validated,
+    // so an unauthenticated caller gets 401 rather than a validation error.
+    roles?: readonly Role[];
+  }
 }
 
 // Anything outside this pattern is replaced, so a caller can't inject junk into the logs.
@@ -46,11 +51,15 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
     if (auth?.startsWith('Bearer ')) {
       request.session = verifyToken(auth.slice(7), config.authSecret);
     }
+    const roles = request.routeOptions.config.roles;
+    if (roles) requireRole(request, ...roles);
   });
 
   if (config.demoLatencyMs > 0) {
     app.log.warn({ demoLatencyMs: config.demoLatencyMs }, 'DEMO_LATENCY_MS is on');
-    app.addHook('preHandler', async () => {
+    // onRequest runs before parsing and validation, so error responses are delayed too.
+    app.addHook('onRequest', async (request) => {
+      if (!request.url.startsWith('/api/')) return;
       await new Promise((resolve) => setTimeout(resolve, config.demoLatencyMs));
     });
   }
