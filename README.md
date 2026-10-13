@@ -12,11 +12,7 @@ You need Docker.
 docker compose up --build
 ```
 
-The API comes up on http://localhost:3000. Check it with:
-
-```bash
-curl http://localhost:3000/api/health
-```
+The app comes up on http://localhost:3000. The API is under `/api`; `/api/health` is a quick check.
 
 Demo accounts (password `claimpay-demo`): `adjuster@claimpay.test`, `silver.member@claimpay.test`, `gold.member@claimpay.test`.
 
@@ -28,7 +24,9 @@ To run the app outside Docker against a local Postgres, copy `.env.example` to `
 |---|---|
 | [docs/business-rules.md](docs/business-rules.md) | The rules the app must follow, including a hand-calculated table of payment amounts that the tests use as expected results |
 | [docs/risk-map.md](docs/risk-map.md) | What could go wrong, what it would cost, and which test layer covers it |
-| [app/](app/) | The ClaimPay API: Node, TypeScript, Fastify, PostgreSQL |
+| [app/src](app/src) | The ClaimPay API: Node, TypeScript, Fastify, PostgreSQL |
+| [app/public](app/public) | The web UI: one page of plain HTML, CSS and JavaScript, no framework. Member and adjuster views. |
+| [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI: typecheck, lint, format check, and a Docker start-up check on every pull request |
 | [docs/ai-log.md](docs/ai-log.md) | How AI tools were used on this repo |
 
 ## API
@@ -48,9 +46,13 @@ To run the app outside Docker against a local Postgres, copy `.env.example` to `
 
 Every response carries an `X-Correlation-Id` header. Send your own to follow a request through the logs.
 
+## The UI
+
+Two roles, one page. A member signs in, submits claims and sees decisions and payments. An adjuster sees the queue, decides claims and records payments. It is written to be accessible first: real labels, field errors tied to their inputs, focus moved to the first problem, a live region for results, keyboard-reachable everything. The UI's only path to the API is [app/public/api-client.js](app/public/api-client.js), which is what the contract tests will exercise.
+
 ## Coming next
 
-A web UI, then unit, contract and Playwright tests, then the CI pipeline. Each lands as its own pull request.
+Unit, contract and Playwright tests, then the merge gate. Each lands as its own pull request.
 
 ## License
 
