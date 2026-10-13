@@ -45,6 +45,13 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
   app.decorate('db', db);
   app.decorateRequest('session', null);
 
+  // Some clients send a bodiless POST as a chunked, empty stream with no content type. That is
+  // not a body, so don't answer it with 415. Anything with actual bytes and no known type still is.
+  app.addContentTypeParser('*', { parseAs: 'buffer' }, (_request, body, done) => {
+    if (body.length === 0) done(null, undefined);
+    else done(new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send JSON.'), undefined);
+  });
+
   app.addHook('onRequest', async (request, reply) => {
     reply.header('x-correlation-id', request.id);
     const auth = request.headers.authorization;
