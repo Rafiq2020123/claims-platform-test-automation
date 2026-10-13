@@ -6,6 +6,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Browser code: no Node globals here.
     files: ['app/public/**/*.js'],
     languageOptions: {
       globals: {
@@ -17,6 +18,10 @@ export default tseslint.config(
         globalThis: 'readonly',
       },
     },
+  },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
   },
   {
     rules: {

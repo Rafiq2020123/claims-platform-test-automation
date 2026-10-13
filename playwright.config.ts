@@ -12,7 +12,9 @@ export default defineConfig({
   retries: CI ? 1 : 0,
   workers: CI ? 4 : undefined,
   forbidOnly: CI,
-  reporter: CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
+  reporter: CI
+    ? [['list'], ['html', { open: 'never' }], ['json', { outputFile: 'test-results/results.json' }]]
+    : [['list']],
   timeout: 30_000,
   expect: { timeout: 5_000 },
   use: {

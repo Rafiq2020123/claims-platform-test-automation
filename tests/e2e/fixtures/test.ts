@@ -4,7 +4,11 @@ import { AdjusterPage } from '../pages/adjuster-page.js';
 import { MemberPage } from '../pages/member-page.js';
 import { SignInPage } from '../pages/sign-in-page.js';
 
-export const ADJUSTER = { email: 'adjuster@claimpay.test', password: 'claimpay-demo' };
+// The seeded adjuster. The password follows SEED_PASSWORD so a changed seed changes one place.
+export const ADJUSTER = {
+  email: 'adjuster@claimpay.test',
+  password: process.env.SEED_PASSWORD ?? 'claimpay-demo',
+};
 
 export interface Fixtures {
   api: Api;

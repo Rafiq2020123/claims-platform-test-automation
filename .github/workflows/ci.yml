@@ -63,6 +63,36 @@ jobs:
         run: git diff --exit-code -- pacts/
       - run: npm run test:contract:provider
 
+  api-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: claimpay
+          POSTGRES_PASSWORD: claimpay
+          POSTGRES_DB: claimpay
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U claimpay"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgres://claimpay:claimpay@localhost:5432/claimpay
+      AUTH_SECRET: ci-only-secret-not-for-anything-real-0000
+      SEED_PASSWORD: ci-only-password
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm run test:api
+
   e2e-tests:
     runs-on: ubuntu-latest
     services:
@@ -93,6 +123,9 @@ jobs:
       - run: npm run db:migrate
       - run: npm run db:seed
       - run: npm run test:e2e
+      - name: Flaky tests, if any, in the job summary
+        if: always()
+        run: node scripts/flaky-summary.mjs test-results/results.json
       - name: Playwright report
         if: always()
         uses: actions/upload-artifact@v4

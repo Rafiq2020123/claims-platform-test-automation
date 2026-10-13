@@ -1,0 +1,52 @@
+# Runs the Playwright suite against the app with the planted rounding defect switched on.
+# It is expected to FAIL, with exactly the two amount tests red. Started by hand, never on a
+# push, so main's own checks are always against the healthy build.
+name: Demo - planted defect
+
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e-with-defect:
+    name: Playwright against DEMO_DEFECT=payment-rounding (expected to fail)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: claimpay
+          POSTGRES_PASSWORD: claimpay
+          POSTGRES_DB: claimpay
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U claimpay"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgres://claimpay:claimpay@localhost:5432/claimpay
+      AUTH_SECRET: ci-only-secret-not-for-anything-real-0000
+      SEED_PASSWORD: claimpay-demo
+      DEMO_DEFECT: payment-rounding
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - name: Playwright (the two amount tests should fail)
+        run: npm run test:e2e
+      - name: Which tests failed
+        if: always()
+        run: node scripts/failed-summary.mjs test-results/results.json
+      - name: Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-with-defect
+          path: playwright-report/
+          retention-days: 90
