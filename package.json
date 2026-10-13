@@ -18,7 +18,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:unit": "node --import tsx --test 'tests/unit/**/*.test.ts'",
+    "test": "npm run test:unit"
   },
   "dependencies": {
     "@fastify/static": "^10.1.6",

@@ -9,10 +9,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
     "rootDir": ".",
     "outDir": "dist",
     "sourceMap": true
   },
-  "include": ["app/**/*.ts"],
+  "include": ["app/**/*.ts", "tests/**/*.ts"],
   "exclude": ["app/public"]
 }
