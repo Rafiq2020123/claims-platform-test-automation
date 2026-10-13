@@ -7,7 +7,7 @@
   --error: #a4232b;
   --bg: #ffffff;
   --bg-soft: #f5f7fa;
-  --focus: #e8a317;
+  --focus: #b45309;
 }
 
 * {
@@ -130,6 +130,8 @@ button[type='button'] {
 }
 :focus-visible {
   outline: 3px solid var(--focus);
+  /* The gap keeps the outline on the page background, so its contrast doesn't depend on the
+     colour of the control it surrounds. */
   outline-offset: 2px;
 }
 
