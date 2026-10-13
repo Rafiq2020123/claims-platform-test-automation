@@ -13,5 +13,6 @@
     "outDir": "dist",
     "sourceMap": true
   },
-  "include": ["app/**/*.ts"]
+  "include": ["app/**/*.ts"],
+  "exclude": ["app/public"]
 }

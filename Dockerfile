@@ -15,6 +15,7 @@ COPY --from=build /src/dist ./dist
 # Compiled scripts look for these next to themselves.
 COPY app/migrations ./dist/app/migrations
 COPY app/seed ./dist/app/seed
+COPY app/public ./dist/app/public
 USER node
 EXPOSE 3000
 CMD ["sh", "-c", "node dist/app/scripts/migrate.js && node dist/app/scripts/seed.js && node dist/app/src/main.js"]

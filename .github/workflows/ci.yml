@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+
+  app-smoke:
+    name: App starts in Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose up --build --detach --wait
+      - name: Health check
+        run: |
+          curl --fail --silent http://localhost:3000/api/health | tee health.json
+          grep -q '"status":"ok"' health.json
+      - name: Home page is served
+        run: curl --fail --silent --output /dev/null http://localhost:3000/
+      - name: Logs
+        if: always()
+        run: docker compose logs --no-color
+      - name: Surface logs as an annotation
+        if: failure()
+        run: |
+          msg=$(docker compose logs --no-color --tail 60 2>&1 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=compose logs::${msg}"
+      - if: always()
+        run: docker compose down --volumes
