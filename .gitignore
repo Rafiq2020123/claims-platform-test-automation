@@ -13,3 +13,4 @@ blob-report/
 .idea/
 __pycache__/
 .venv/
+.playwright/

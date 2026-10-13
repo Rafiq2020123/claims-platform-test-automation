@@ -15,6 +15,6 @@
     "outDir": "dist",
     "sourceMap": true
   },
-  "include": ["app/**/*.ts", "tests/**/*.ts"],
+  "include": ["app/**/*.ts", "tests/**/*.ts", "playwright.config.ts"],
   "exclude": ["app/public"]
 }
