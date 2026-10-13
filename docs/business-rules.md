@@ -29,8 +29,8 @@ A claim is accepted only if all of these hold. Otherwise the API returns **400**
 |---|---|
 | Billed amount | 1 cent to 10,000,000 cents ($100,000.00), inclusive |
 | Service date | Not in the future, and not more than 365 days before the submission date |
-| Procedure code | One of the codes in the published list (`seed/procedure-codes.json`) |
-| Member | Must be active |
+| Procedure code | One of the codes in the published list ([app/seed/procedure-codes.json](../app/seed/procedure-codes.json)) |
+| Member | Must be active. Inactive members can still sign in and see their history, but can't submit new claims. |
 
 ## 5. Claim status
 
@@ -57,7 +57,7 @@ Allowed moves:
 
 Every other move returns **409**. DENIED and PAID are final.
 
-- A denial needs a reason code.
+- A denial needs a reason code: `NOT_COVERED`, `MISSING_INFORMATION`, `DUPLICATE_CLAIM` or `OUT_OF_NETWORK`.
 - An approval needs an approved amount greater than 0 and not more than the billed amount.
 
 ## 6. Payment amount
