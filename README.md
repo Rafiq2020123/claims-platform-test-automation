@@ -28,7 +28,8 @@ The app and database ports are bound to `127.0.0.1`. The demo ships with known c
 | [docs/risk-map.md](docs/risk-map.md) | What could go wrong, what it would cost, and which test layer covers it |
 | [app/src](app/src) | The ClaimPay API: Node, TypeScript, Fastify, PostgreSQL |
 | [app/public](app/public) | The web UI: one page of plain HTML, CSS and JavaScript, no framework. Member and adjuster views. |
-| [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI: typecheck, lint, format check, and a Docker start-up check on every pull request |
+| [tests/unit](tests/unit) | Unit tests for the business rules: payment formula, status transitions, claim validation, money parsing. 90 tests, Node's built-in runner. |
+| [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI: typecheck, lint, format check, unit tests, and a Docker start-up check on every pull request |
 | [docs/ai-log.md](docs/ai-log.md) | How AI tools were used on this repo, including an independent review and what it found |
 
 ## API
@@ -52,9 +53,17 @@ Every response carries an `X-Correlation-Id` header. Send your own to follow a r
 
 Two roles, one page. A member signs in, submits claims and sees decisions and payments. An adjuster sees the queue, decides claims and records payments. It is written to be accessible first: real labels, field errors tied to their inputs, focus moved to the first problem, a live region for results, keyboard-reachable everything. The UI's only path to the API is [app/public/api-client.js](app/public/api-client.js). The contract tests, when they land, will run that file rather than a copy of it.
 
+## Tests
+
+```bash
+npm test
+```
+
+**Unit** (`tests/unit`): the rules that don't need a database. The payment tests read their expected values from the worked-examples table in `docs/business-rules.md` at run time, so the document is the oracle and can't drift from the tests. Two deliberate mutations were run while writing them: truncating instead of rounding half up fails 5 tests; allowing SUBMITTED → PAID fails 2.
+
 ## Coming next
 
-Unit, contract and Playwright tests, then the merge gate. Each lands as its own pull request.
+Contract and Playwright tests, then the merge gate. Each lands as its own pull request.
 
 ## License
 
