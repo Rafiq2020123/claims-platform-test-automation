@@ -52,6 +52,17 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
     else done(new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send JSON.'), undefined);
   });
 
+  if (config.demoLatencyMs > 0) {
+    app.log.warn({ demoLatencyMs: config.demoLatencyMs }, 'DEMO_LATENCY_MS is on');
+    // Registered before the auth hook on purpose. Hooks run in order and a throw stops the
+    // chain, so if this came second a 401 or 403 would skip the delay. Being first, every
+    // API response is delayed, including the error ones.
+    app.addHook('onRequest', async (request) => {
+      if (!request.url.startsWith('/api/')) return;
+      await new Promise((resolve) => setTimeout(resolve, config.demoLatencyMs));
+    });
+  }
+
   app.addHook('onRequest', async (request, reply) => {
     reply.header('x-correlation-id', request.id);
     const auth = request.headers.authorization;
@@ -62,14 +73,6 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
     if (roles) requireRole(request, ...roles);
   });
 
-  if (config.demoLatencyMs > 0) {
-    app.log.warn({ demoLatencyMs: config.demoLatencyMs }, 'DEMO_LATENCY_MS is on');
-    // onRequest runs before parsing and validation, so error responses are delayed too.
-    app.addHook('onRequest', async (request) => {
-      if (!request.url.startsWith('/api/')) return;
-      await new Promise((resolve) => setTimeout(resolve, config.demoLatencyMs));
-    });
-  }
   if (config.demoDefect) {
     app.log.warn({ demoDefect: config.demoDefect }, 'DEMO_DEFECT is on');
   }

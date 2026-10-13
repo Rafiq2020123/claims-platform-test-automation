@@ -91,7 +91,7 @@ Pact's own OpenAPI-style response checking is deliberately not used here. The co
 
 ## Where this stands
 
-Stage 1 is built. What was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Two items wait on the repository becoming public: branch protection with required checks (not available on a private repo under the current plan) and a public report link.
+Stage 1 is built. What was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Two items wait on the repository becoming public: branch protection with required checks and a public report link. Both are limits of a private repository on the free GitHub plan, not of the repo; the checks already run on every pull request, they just cannot block a merge yet.
 
 ## License
 

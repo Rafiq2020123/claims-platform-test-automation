@@ -80,6 +80,9 @@ describe('payment idempotency', () => {
     assert.deepEqual(rows, [{ n: 1 }]);
   });
 
+  // Five requests fired together from one process. The client can't prove they overlapped
+  // inside the server; what this does prove is that whatever the overlap was, one row came
+  // out. The advisory lock in the route is what makes that hold, and this is its only check.
   it('five concurrent requests with one key produce one payment', async () => {
     const claim = await h.approvedClaim(member, adjuster, 1000);
     const key = randomUUID();
