@@ -10,11 +10,11 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "tsx watch app/src/main.ts",
+    "dev": "node --env-file-if-exists=.env --import tsx --watch app/src/main.ts",
     "start": "node dist/app/src/main.js",
     "build": "tsc -p tsconfig.build.json",
-    "db:migrate": "tsx app/scripts/migrate.ts",
-    "db:seed": "tsx app/scripts/seed.ts",
+    "db:migrate": "node --env-file-if-exists=.env --import tsx app/scripts/migrate.ts",
+    "db:seed": "node --env-file-if-exists=.env --import tsx app/scripts/seed.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
