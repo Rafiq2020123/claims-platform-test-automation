@@ -1,0 +1,37 @@
+{
+  "name": "claims-platform-test-automation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Test automation for ClaimPay, a small healthcare claims and payments demo app",
+  "license": "MIT",
+  "author": "Rafiq Noori",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch app/src/main.ts",
+    "start": "node dist/app/src/main.js",
+    "build": "tsc -p tsconfig.build.json",
+    "db:migrate": "tsx app/scripts/migrate.ts",
+    "db:seed": "tsx app/scripts/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "fastify": "^5.12.7",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.2"
+  }
+}
