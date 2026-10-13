@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import fastifyStatic from '@fastify/static';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { verifyToken, type Role, type Session } from './auth.js';
 import type { Config } from './config.js';
@@ -77,6 +79,10 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
     });
   });
 
+  app.register(fastifyStatic, {
+    root: fileURLToPath(new URL('../public/', import.meta.url)),
+    cacheControl: false,
+  });
   app.register(healthRoutes, { prefix: '/api' });
   app.register(sessionRoutes, { prefix: '/api' });
   app.register(memberRoutes, { prefix: '/api' });
