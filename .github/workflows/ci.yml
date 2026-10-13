@@ -33,6 +33,11 @@ jobs:
         run: curl --fail --silent --output /dev/null http://localhost:3000/
       - name: Logs
         if: always()
-        run: docker compose logs app
+        run: docker compose logs --no-color
+      - name: Surface logs as an annotation
+        if: failure()
+        run: |
+          msg=$(docker compose logs --no-color --tail 60 2>&1 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=compose logs::${msg}"
       - if: always()
         run: docker compose down --volumes
