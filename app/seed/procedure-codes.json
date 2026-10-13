@@ -1,0 +1,10 @@
+[
+  { "code": "PC-1001", "description": "Office visit, new patient" },
+  { "code": "PC-1002", "description": "Office visit, established patient" },
+  { "code": "PC-2001", "description": "Blood panel" },
+  { "code": "PC-2002", "description": "Urinalysis" },
+  { "code": "PC-3001", "description": "X-ray, chest" },
+  { "code": "PC-3002", "description": "MRI, knee" },
+  { "code": "PC-4001", "description": "Physical therapy session" },
+  { "code": "PC-5001", "description": "Emergency room visit" }
+]
