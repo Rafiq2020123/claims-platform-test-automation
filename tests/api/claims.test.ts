@@ -50,6 +50,30 @@ describe('claim submission', () => {
     });
   }
 
+  for (const [label, serviceDate] of [
+    ['an impossible date', '2026-02-30'],
+    ['not a date at all', 'yesterday'],
+    ['a date with time', '2026-10-01T00:00:00Z'],
+  ] as const) {
+    it(`service date ${label} -> 400`, async () => {
+      const { status, body } = await submit({ serviceDate });
+      assert.equal(status, 400);
+      assert.ok(body.error?.fields.serviceDate);
+    });
+  }
+
+  for (const [label, billedCents] of [
+    ['fractional cents', 12.5],
+    ['a string', '100'],
+    ['negative', -100],
+  ] as const) {
+    it(`billed amount ${label} -> 400`, async () => {
+      const { status, body } = await submit({ billedCents });
+      assert.equal(status, 400);
+      assert.ok(body.error?.fields.billedCents);
+    });
+  }
+
   it('an unknown procedure code is rejected on that field', async () => {
     const { status, body } = await submit({ procedureCode: 'PC-0000' });
     assert.equal(status, 400);
@@ -157,9 +181,23 @@ describe('status transitions through the API', () => {
     }
   }
 
-  it('approving for more than the billed amount is refused', async () => {
+  // Rule §5: approved amount greater than 0 and not more than billed. Both edges, both sides.
+  for (const [approvedCents, expected] of [
+    [0, 400],
+    [1, 200],
+    [1000, 200],
+    [1001, 400],
+  ] as const) {
+    it(`approving ${approvedCents} of 1000 billed -> ${expected}`, async () => {
+      const { id } = await h.claim(member, 1000);
+      const r = await h.decide(adjuster, id, { decision: 'APPROVE', approvedCents });
+      assert.equal(r.status, expected);
+    });
+  }
+
+  it('approving with a fractional amount is refused', async () => {
     const { id } = await h.claim(member, 1000);
-    const r = await h.decide(adjuster, id, { decision: 'APPROVE', approvedCents: 1001 });
+    const r = await h.decide(adjuster, id, { decision: 'APPROVE', approvedCents: 10.5 });
     assert.equal(r.status, 400);
   });
 

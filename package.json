@@ -25,6 +25,7 @@
     "test:contract:provider": "node --env-file-if-exists=.env --import tsx --test tests/contract/provider.test.ts",
     "test:contract": "npm run test:contract:consumer && npm run test:contract:provider",
     "test:e2e": "playwright test --project=chromium",
+    "test:e2e:quarantine": "playwright test --config playwright.quarantine.config.ts --project=chromium --pass-with-no-tests",
     "test:api": "node --env-file-if-exists=.env --import tsx --test \"tests/api/**/*.test.ts\""
   },
   "dependencies": {

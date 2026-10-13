@@ -89,7 +89,11 @@ function swapInRealToken(req: IncomingMessage, _res: ServerResponse, next: () =>
 describe('claimpay-api honours the claimpay-web contract', () => {
   before(async () => {
     db = createPool(config.databaseUrl);
-    app = buildServer({ ...config, logLevel: 'warn' }, db);
+    // The contract's example service date is fixed, so the provider's clock is too. Otherwise the
+    // committed contract would stop verifying one year after it was written.
+    app = buildServer({ ...config, logLevel: 'warn' }, db, {
+      now: () => new Date('2026-10-13T12:00:00.000Z'),
+    });
     const address = await app.listen({ port: 0, host: '127.0.0.1' });
     baseUrl = address;
   });

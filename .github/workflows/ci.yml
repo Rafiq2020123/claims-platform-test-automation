@@ -134,6 +134,45 @@ jobs:
           path: playwright-report/
           retention-days: 30
 
+  # Quarantined tests (@quarantine) run here and nowhere else. The job can fail without
+  # blocking the merge; the point is to keep them running so the owner can see when they
+  # stabilise. Empty most of the time.
+  e2e-quarantine:
+    name: Quarantined Playwright tests (non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: claimpay
+          POSTGRES_PASSWORD: claimpay
+          POSTGRES_DB: claimpay
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U claimpay"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgres://claimpay:claimpay@localhost:5432/claimpay
+      AUTH_SECRET: ci-only-secret-not-for-anything-real-0000
+      SEED_PASSWORD: claimpay-demo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npm run test:e2e:quarantine
+      - name: Failures, if any, in the job summary
+        if: always()
+        run: node scripts/failed-summary.mjs test-results/results.json
+
   app-smoke:
     name: App starts in Docker
     runs-on: ubuntu-latest

@@ -8,13 +8,16 @@ import { ApiClient, ApiError } from '../../app/public/api-client.js';
 // Each interaction says what the UI sends and the least it needs back. The provider side
 // (provider.test.ts) replays these against the running app.
 
-const { like, eachLike, uuid, integer, string } = MatchersV3;
+const { like, eachLike, uuid, integer, string, regex } = MatchersV3;
 
 const PACT_DIR = fileURLToPath(new URL('../../pacts/', import.meta.url));
 const pact = new PactV4({ consumer: 'claimpay-web', provider: 'claimpay-api', dir: PACT_DIR });
 
 const CLAIM_ID = 'aaaaaaaa-0000-4000-8000-000000000001';
 const TOKEN = 'contract-test-token';
+// The scheme is part of the contract. `like` would only check for a string, so a client that
+// started sending `Basic` would still pass the mock and only fail against the real app.
+const BEARER = regex('^Bearer .+$', `Bearer ${TOKEN}`);
 
 function client(baseUrl: string, token: string | null = TOKEN): ApiClient {
   const c = new ApiClient(`${baseUrl}/api`);
@@ -32,7 +35,6 @@ const claimBody = () => ({
   approvedCents: null,
   denialReason: null,
   createdAt: string('2026-10-13T12:00:00.000Z'),
-  updatedAt: string('2026-10-13T12:00:00.000Z'),
 });
 
 describe('claimpay-web -> claimpay-api', () => {
@@ -106,7 +108,7 @@ describe('claimpay-web -> claimpay-api', () => {
       .given('a signed-in member')
       .uponReceiving('a valid claim submission')
       .withRequest('POST', '/api/claims', (b) =>
-        b.headers({ Authorization: like(`Bearer ${TOKEN}`) }).jsonBody({
+        b.headers({ Authorization: BEARER }).jsonBody({
           procedureCode: 'PC-1001',
           serviceDate: like('2026-10-10'),
           billedCents: 12500,
@@ -131,7 +133,7 @@ describe('claimpay-web -> claimpay-api', () => {
       .uponReceiving('a claim with a zero amount')
       .withRequest('POST', '/api/claims', (b) =>
         b
-          .headers({ Authorization: like(`Bearer ${TOKEN}`) })
+          .headers({ Authorization: BEARER })
           .jsonBody({ procedureCode: 'PC-1001', serviceDate: like('2026-10-10'), billedCents: 0 }),
       )
       .willRespondWith(400, (b) =>
@@ -167,9 +169,7 @@ describe('claimpay-web -> claimpay-api', () => {
       .addInteraction()
       .given('a signed-in member with one submitted claim', { claimId: CLAIM_ID })
       .uponReceiving("a request for the member's claims")
-      .withRequest('GET', '/api/claims', (b) =>
-        b.headers({ Authorization: like(`Bearer ${TOKEN}`) }),
-      )
+      .withRequest('GET', '/api/claims', (b) => b.headers({ Authorization: BEARER }))
       .willRespondWith(200, (b) => b.jsonBody(eachLike(claimBody())))
       .executeTest(async (mock) => {
         const claims = await client(mock.url).listClaims();
@@ -185,7 +185,7 @@ describe('claimpay-web -> claimpay-api', () => {
       .uponReceiving('an approval decision')
       .withRequest('POST', `/api/claims/${CLAIM_ID}/decision`, (b) =>
         b
-          .headers({ Authorization: like(`Bearer ${TOKEN}`) })
+          .headers({ Authorization: BEARER })
           .jsonBody({ decision: 'APPROVE', approvedCents: 12500 }),
       )
       .willRespondWith(200, (b) =>
@@ -206,18 +206,12 @@ describe('claimpay-web -> claimpay-api', () => {
       .given('a signed-in adjuster and an approved claim', { claimId: CLAIM_ID })
       .uponReceiving('a payment request')
       .withRequest('POST', `/api/claims/${CLAIM_ID}/payment`, (b) =>
-        b.headers({ Authorization: like(`Bearer ${TOKEN}`), 'Idempotency-Key': like('key-1') }),
+        b.headers({ Authorization: BEARER, 'Idempotency-Key': like('key-1') }),
       )
       .willRespondWith(201, (b) =>
-        b.jsonBody({
-          id: uuid(),
-          claimId: uuid(CLAIM_ID),
-          amountCents: integer(8000),
-          approvedCents: integer(12500),
-          coverageBp: integer(8000),
-          copayCents: integer(2000),
-          createdAt: string('2026-10-13T12:00:00.000Z'),
-        }),
+        // The UI shows the amount and nothing else from a payment, so that is all the contract
+        // asks for. The API tests check the full row.
+        b.jsonBody({ amountCents: integer(8000) }),
       )
       .executeTest(async (mock) => {
         const payment = await client(mock.url).recordPayment(CLAIM_ID, 'key-1');
@@ -231,14 +225,12 @@ describe('claimpay-web -> claimpay-api', () => {
       .given('a signed-in member with one paid claim', { claimId: CLAIM_ID })
       .uponReceiving("a request for a claim's payment")
       .withRequest('GET', `/api/claims/${CLAIM_ID}/payment`, (b) =>
-        b.headers({ Authorization: like(`Bearer ${TOKEN}`) }),
+        b.headers({ Authorization: BEARER }),
       )
-      .willRespondWith(200, (b) =>
-        b.jsonBody({ id: uuid(), claimId: uuid(CLAIM_ID), amountCents: integer(8000) }),
-      )
+      .willRespondWith(200, (b) => b.jsonBody({ amountCents: integer(8000) }))
       .executeTest(async (mock) => {
         const payment = await client(mock.url).getPayment(CLAIM_ID);
-        assert.equal(payment.claimId, CLAIM_ID);
+        assert.equal(payment.amountCents, 8000);
       });
   });
 });

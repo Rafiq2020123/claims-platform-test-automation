@@ -61,16 +61,20 @@ every layer against a real database.
    for it (`docker compose logs app | grep <id>`) to see the request's path through the server,
    then look at the row: `claims.correlation_id` and `payments.correlation_id` carry the ID of
    the last change.
-3. **Playwright test:** open the HTML report (`npx playwright show-report`). A failed test has
-   a screenshot, a trace (step by step, with network), and an attachment named
-   `api-calls-with-correlation-ids` listing every API call the page made. Pick the one that
-   went wrong and follow it as in step 2.
+3. **Playwright test:** open the HTML report (`npx playwright show-report`; it is written on
+   every run, locally and in CI). A failed test has a screenshot, a trace (step by step, with
+   network), and an attachment named `api-calls-with-correlation-ids` listing every API call
+   the page made. Pick the one that went wrong and follow it as in step 2. To open a trace
+   directly: `npx playwright show-trace test-results/<test>/trace.zip`.
 4. **Passed on retry?** In CI, that's reported as *flaky* and listed in the job summary. Don't
    leave it. Reproduce locally with `npx playwright test <file> --repeat-each 20`. If it still
    flakes and the fix isn't quick, quarantine it: tag it `@quarantine`, open an issue with the
    failure, the owner, a review date, and what coverage is lost, and link the issue in the tag's
-   comment. Quarantined tests still run but don't block the merge. A test can't stay
-   quarantined past its review date without a new decision.
+   comment. The gating run skips `@quarantine` tests (`grepInvert` in `playwright.config.ts`);
+   the `e2e-quarantine` CI job runs only them and is marked non-blocking, so they keep running
+   where the owner can see them without holding up a merge. Locally:
+   `npm run test:e2e:quarantine`. A test can't stay quarantined past its review date without a
+   new decision.
 
 A worked example of step 2 is in [docs/investigations/001-payment-mismatch.md](docs/investigations/001-payment-mismatch.md).
 

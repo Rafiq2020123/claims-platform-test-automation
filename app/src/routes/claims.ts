@@ -49,7 +49,7 @@ export const claimRoutes: FastifyPluginAsync = async (app) => {
       ]);
       const errors = validateClaim(
         request.body,
-        todayUtc(),
+        todayUtc(app.now()),
         new Set(codes.rows.map((row) => row.code)),
       );
       if (!member.rows[0]?.active) {

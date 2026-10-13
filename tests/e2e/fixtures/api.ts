@@ -73,6 +73,14 @@ export class Api {
     return (await response.json()) as Claim;
   }
 
+  async listClaims(member: TestMember): Promise<Claim[]> {
+    const response = await this.request.get('/api/claims', {
+      headers: { Authorization: `Bearer ${member.token}` },
+    });
+    if (!response.ok()) throw new Error(`listClaims failed: ${response.status()}`);
+    return (await response.json()) as Claim[];
+  }
+
   async approve(claimId: string, approvedCents: number): Promise<Claim> {
     return this.decide(claimId, { decision: 'APPROVE', approvedCents });
   }

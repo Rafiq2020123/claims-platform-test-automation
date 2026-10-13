@@ -49,10 +49,13 @@ gets 403 is real, one that gets 404 isn't. Both now get the same 404.
 
 ## The contract is narrower than the API
 
-Pact records what the UI's client actually reads from each response. The API returns more
-(timestamps, member IDs, plan terms on a payment). Checking those in the contract would turn
-every harmless addition into a contract failure. The contract fails when the UI would break;
-the API tests cover the rest.
+The contract lists the fields the UI reads from each response and nothing more: a payment is
+just `amountCents` to the UI, so that is all the contract asks for. The API returns more (plan
+terms, timestamps, IDs) and the API tests check those. Pact ignores extra fields in a response
+anyway; what the narrow contract buys is that a provider can rename or drop a field the UI
+never used without a contract failure, and that a verification failure always points at
+something the UI depends on. The request side is strict where it matters: the authorization
+header must match `^Bearer .+$`, not just be a string.
 
 ## Demo switches are environment variables, off by default, logged loudly when on
 

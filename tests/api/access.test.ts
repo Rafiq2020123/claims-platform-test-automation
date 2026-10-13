@@ -64,7 +64,9 @@ describe('access rules', () => {
   it('a tampered token is rejected', async () => {
     const member = await h.member();
     const [body, signature] = member.token.split('.');
-    const forged = `${body}.${signature!.slice(0, -2)}AA`;
+    // Swap the last character for one it isn't, so the token is always actually different.
+    const last = signature!.at(-1);
+    const forged = `${body}.${signature!.slice(0, -1)}${last === 'A' ? 'B' : 'A'}`;
     const { status } = await h.request('GET', '/api/claims', { token: forged });
     assert.equal(status, 401);
   });

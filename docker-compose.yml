@@ -20,6 +20,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://claimpay:claimpay@db:5432/claimpay
+      HOST: 0.0.0.0
       AUTH_SECRET: ${AUTH_SECRET:-local-dev-secret-not-for-anything-real}
       SEED_PASSWORD: ${SEED_PASSWORD:-claimpay-demo}
       DEMO_DEFECT: ${DEMO_DEFECT:-}

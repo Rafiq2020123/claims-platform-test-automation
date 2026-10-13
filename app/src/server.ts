@@ -16,6 +16,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     config: Config;
     db: Db;
+    now: () => Date;
   }
   interface FastifyRequest {
     session: Session | null;
@@ -30,7 +31,14 @@ declare module 'fastify' {
 // Anything outside this pattern is replaced, so a caller can't inject junk into the logs.
 const CORRELATION_ID = /^[A-Za-z0-9._-]{1,100}$/;
 
-export function buildServer(config: Config, db: Db): FastifyInstance {
+export interface ServerOptions {
+  // Where the server gets the time from. Production uses the real clock; tests that depend on
+  // the service-date window pass a fixed one, so a run that crosses midnight UTC can't flake and
+  // the committed contract stays valid after a year.
+  now?: () => Date;
+}
+
+export function buildServer(config: Config, db: Db, options: ServerOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: { level: config.logLevel },
     requestIdHeader: false,
@@ -43,6 +51,7 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
 
   app.decorate('config', config);
   app.decorate('db', db);
+  app.decorate('now', options.now ?? (() => new Date()));
   app.decorateRequest('session', null);
 
   // Some clients send a bodiless POST as a chunked, empty stream with no content type. That is

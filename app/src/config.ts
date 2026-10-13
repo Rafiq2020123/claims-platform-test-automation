@@ -21,7 +21,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 
   return {
     port: Number(env.PORT ?? 3000),
-    host: env.HOST ?? '0.0.0.0',
+    // Loopback unless told otherwise. The demo ships with known credentials and a known signing
+    // secret; Docker sets HOST=0.0.0.0 inside the container, where Compose binds the published
+    // port to 127.0.0.1 anyway.
+    host: env.HOST ?? '127.0.0.1',
     databaseUrl: required(env, 'DATABASE_URL'),
     authSecret,
     tokenTtlSeconds: Number(env.TOKEN_TTL_SECONDS ?? 3600),
