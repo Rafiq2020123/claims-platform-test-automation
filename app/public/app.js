@@ -6,6 +6,9 @@ const $ = (id) => document.getElementById(id);
 
 let procedureNames = new Map();
 let currentUser = null;
+// Bumped on every sign-in and sign-out. A response that comes back for an earlier session
+// is dropped, so one account's data can never land on another account's screen.
+let sessionEpoch = 0;
 
 // ---------- Views ----------
 
@@ -44,26 +47,56 @@ function showFirstInvalid(form) {
   form.querySelector('[aria-invalid="true"]')?.focus();
 }
 
+// Runs `work` with the form's submit button disabled, and swallows a second submit that
+// arrives while the first is still in flight.
+async function whileSubmitting(form, work) {
+  const button = form.querySelector('button[type="submit"]');
+  if (button.disabled) return;
+  button.disabled = true;
+  try {
+    await work();
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function clearAccountData() {
+  for (const table of document.querySelectorAll('.claims')) {
+    table.tBodies[0].replaceChildren();
+    table.hidden = true;
+  }
+  $('member-empty').hidden = true;
+  $('adjuster-empty').hidden = true;
+  $('claim-form').reset();
+  clearErrors($('claim-form'));
+}
+
 // ---------- Sign in ----------
 
 $('sign-in-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   clearErrors(form);
-  try {
-    currentUser = await api.signIn(form.email.value, form.password.value);
-    form.reset();
-    await loadProcedureCodes();
-    if (currentUser.role === 'member') await showMember();
-    else await showAdjuster();
-  } catch (error) {
-    $('sign-in-error').textContent = describe(error);
-  }
+  await whileSubmitting(form, async () => {
+    try {
+      currentUser = await api.signIn(form.email.value, form.password.value);
+      sessionEpoch += 1;
+      form.reset();
+      clearAccountData();
+      await loadProcedureCodes();
+      if (currentUser.role === 'member') await showMember();
+      else await showAdjuster();
+    } catch (error) {
+      $('sign-in-error').textContent = describe(error);
+    }
+  });
 });
 
 $('sign-out').addEventListener('click', () => {
   api.signOut();
   currentUser = null;
+  sessionEpoch += 1;
+  clearAccountData();
   showView('sign-in');
   $('email').focus();
 });
@@ -86,7 +119,9 @@ async function showMember() {
 }
 
 async function renderMemberClaims() {
+  const epoch = sessionEpoch;
   const claims = await api.listClaims();
+  if (epoch !== sessionEpoch) return;
   const table = $('member-claims');
   $('member-empty').hidden = claims.length > 0;
   table.hidden = claims.length === 0;
@@ -104,13 +139,25 @@ function memberRow(claim) {
     statusCell(claim.status),
     cell(outcome(claim), 'amount'),
   );
-  if (claim.status === 'PAID') {
-    // The list doesn't carry the payment; fetch it so the member can see what was paid.
-    api.getPayment(claim.id).then((payment) => {
-      row.lastElementChild.textContent = `Paid ${formatCents(payment.amountCents)}`;
-    });
-  }
+  if (claim.status === 'PAID') showPaidAmount(claim.id, row.lastElementChild);
   return row;
+}
+
+// The list doesn't carry the payment; fetch it so the member can see what was paid.
+async function showPaidAmount(claimId, cellEl) {
+  const epoch = sessionEpoch;
+  try {
+    const payment = await api.getPayment(claimId);
+    if (epoch !== sessionEpoch) return;
+    cellEl.textContent = `Paid ${formatCents(payment.amountCents)}`;
+  } catch {
+    if (epoch !== sessionEpoch) return;
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.textContent = 'Amount unavailable, retry';
+    retry.addEventListener('click', () => showPaidAmount(claimId, cellEl));
+    cellEl.replaceChildren(retry);
+  }
 }
 
 function outcome(claim) {
@@ -138,26 +185,28 @@ $('claim-form').addEventListener('submit', async (event) => {
     return;
   }
 
-  try {
-    const claim = await api.submitClaim({
-      procedureCode: form.procedureCode.value,
-      serviceDate: form.serviceDate.value,
-      billedCents,
-    });
-    form.reset();
-    announce(`Claim submitted for ${formatCents(claim.billedCents)}.`);
-    await renderMemberClaims();
-  } catch (error) {
-    if (error instanceof ApiError && error.code === 'VALIDATION_FAILED') {
-      setFieldError('procedure-code', error.fields.procedureCode);
-      setFieldError('service-date', error.fields.serviceDate);
-      setFieldError('billed-amount', error.fields.billedCents);
-      $('claim-form-error').textContent = error.fields.member ?? '';
-      showFirstInvalid(form);
-    } else {
-      $('claim-form-error').textContent = describe(error);
+  await whileSubmitting(form, async () => {
+    try {
+      const claim = await api.submitClaim({
+        procedureCode: form.procedureCode.value,
+        serviceDate: form.serviceDate.value,
+        billedCents,
+      });
+      form.reset();
+      announce(`Claim submitted for ${formatCents(claim.billedCents)}.`);
+      await renderMemberClaims();
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'VALIDATION_FAILED') {
+        setFieldError('procedure-code', error.fields.procedureCode);
+        setFieldError('service-date', error.fields.serviceDate);
+        setFieldError('billed-amount', error.fields.billedCents);
+        $('claim-form-error').textContent = error.fields.member ?? '';
+        showFirstInvalid(form);
+      } else {
+        $('claim-form-error').textContent = describe(error);
+      }
     }
-  }
+  });
 });
 
 // ---------- Adjuster ----------
@@ -170,7 +219,9 @@ async function showAdjuster() {
 }
 
 async function renderAdjusterClaims() {
+  const epoch = sessionEpoch;
   const claims = await api.listClaims();
+  if (epoch !== sessionEpoch) return;
   const table = $('adjuster-claims');
   $('adjuster-empty').hidden = claims.length > 0;
   table.hidden = claims.length === 0;
@@ -254,27 +305,34 @@ $('decision-form').addEventListener('submit', async (event) => {
   }
   if (decision === 'DENY') body.reasonCode = $('reason-code').value;
 
-  try {
-    const updated = await api.decideClaim(claimBeingDecided.id, body);
-    $('decision-dialog').close();
-    announce(`Claim ${humanize(updated.status).toLowerCase()}.`);
-    await renderAdjusterClaims();
-  } catch (error) {
-    if (error instanceof ApiError && error.code === 'VALIDATION_FAILED') {
-      setFieldError('approved-amount', error.fields.approvedCents);
-      setFieldError('reason-code', error.fields.reasonCode);
-      showFirstInvalid(form);
-    } else {
-      $('decision-error').textContent = describe(error);
+  await whileSubmitting(form, async () => {
+    try {
+      const updated = await api.decideClaim(claimBeingDecided.id, body);
+      $('decision-dialog').close();
+      announce(`Claim ${humanize(updated.status).toLowerCase()}.`);
+      await renderAdjusterClaims();
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'VALIDATION_FAILED') {
+        setFieldError('approved-amount', error.fields.approvedCents);
+        setFieldError('reason-code', error.fields.reasonCode);
+        showFirstInvalid(form);
+      } else {
+        $('decision-error').textContent = describe(error);
+      }
     }
-  }
+  });
 });
+
+// One Idempotency-Key per claim until its payment is confirmed. If the request fails after the
+// server committed, the next click resends the same key and gets the original payment back.
+const paymentKeys = new Map();
 
 async function recordPayment(claim, button) {
   button.disabled = true;
+  if (!paymentKeys.has(claim.id)) paymentKeys.set(claim.id, crypto.randomUUID());
   try {
-    // One key per click. A retry of the same click (network blip) reuses it; a new click gets a new one.
-    const payment = await api.recordPayment(claim.id, crypto.randomUUID());
+    const payment = await api.recordPayment(claim.id, paymentKeys.get(claim.id));
+    paymentKeys.delete(claim.id);
     announce(`Payment of ${formatCents(payment.amountCents)} recorded.`);
     await renderAdjusterClaims();
   } catch (error) {

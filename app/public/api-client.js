@@ -1,4 +1,4 @@
-// The UI's only way of talking to the API. The contract tests run this same file
+// The UI's only way of talking to the API. The contract tests will run this same file
 // against a mock provider, so a change to a request here is a change to the contract.
 
 export class ApiError extends Error {
