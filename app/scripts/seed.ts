@@ -41,7 +41,7 @@ try {
   for (const user of users) {
     await client.query(
       `INSERT INTO users (email, full_name, role, plan_code, password_hash)
-       VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING`,
+       VALUES ($1, $2, $3, $4, $5) ON CONFLICT (lower(email)) DO NOTHING`,
       [user.email, user.name, user.role, user.plan, await hashPassword(password)],
     );
   }

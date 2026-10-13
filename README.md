@@ -16,18 +16,20 @@ The app comes up on http://localhost:3000. The API is under `/api`; `/api/health
 
 Demo accounts (password `claimpay-demo`): `adjuster@claimpay.test`, `silver.member@claimpay.test`, `gold.member@claimpay.test`.
 
-To run the app outside Docker against a local Postgres, copy `.env.example` to `.env`, then `npm ci`, `npm run db:migrate`, `npm run db:seed`, `npm run dev`.
+To run the app outside Docker against a local Postgres: copy `.env.example` to `.env` and edit `DATABASE_URL`, then `npm ci`, `npm run db:migrate`, `npm run db:seed`, `npm run dev`. The scripts read `.env` themselves (Node's `--env-file-if-exists`), so nothing needs exporting.
+
+The app and database ports are bound to `127.0.0.1`. The demo ships with known credentials and a known signing secret, so it is not meant to be reachable from other machines as is.
 
 ## What's here now
 
 | Path | What it is |
 |---|---|
-| [docs/business-rules.md](docs/business-rules.md) | The rules the app must follow, including a hand-calculated table of payment amounts that the tests use as expected results |
+| [docs/business-rules.md](docs/business-rules.md) | The rules the app must follow, including a hand-calculated table of payment amounts that the test suites will use as expected results |
 | [docs/risk-map.md](docs/risk-map.md) | What could go wrong, what it would cost, and which test layer covers it |
 | [app/src](app/src) | The ClaimPay API: Node, TypeScript, Fastify, PostgreSQL |
 | [app/public](app/public) | The web UI: one page of plain HTML, CSS and JavaScript, no framework. Member and adjuster views. |
 | [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI: typecheck, lint, format check, and a Docker start-up check on every pull request |
-| [docs/ai-log.md](docs/ai-log.md) | How AI tools were used on this repo |
+| [docs/ai-log.md](docs/ai-log.md) | How AI tools were used on this repo, including an independent review and what it found |
 
 ## API
 
@@ -48,7 +50,7 @@ Every response carries an `X-Correlation-Id` header. Send your own to follow a r
 
 ## The UI
 
-Two roles, one page. A member signs in, submits claims and sees decisions and payments. An adjuster sees the queue, decides claims and records payments. It is written to be accessible first: real labels, field errors tied to their inputs, focus moved to the first problem, a live region for results, keyboard-reachable everything. The UI's only path to the API is [app/public/api-client.js](app/public/api-client.js), which is what the contract tests will exercise.
+Two roles, one page. A member signs in, submits claims and sees decisions and payments. An adjuster sees the queue, decides claims and records payments. It is written to be accessible first: real labels, field errors tied to their inputs, focus moved to the first problem, a live region for results, keyboard-reachable everything. The UI's only path to the API is [app/public/api-client.js](app/public/api-client.js). The contract tests, when they land, will run that file rather than a copy of it.
 
 ## Coming next
 

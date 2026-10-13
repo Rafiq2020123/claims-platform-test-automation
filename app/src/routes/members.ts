@@ -16,6 +16,7 @@ export const memberRoutes: FastifyPluginAsync = async (app) => {
   app.post<{ Body: NewMember }>(
     '/members',
     {
+      config: { roles: ['adjuster'] },
       schema: {
         body: {
           type: 'object',
@@ -38,9 +39,9 @@ export const memberRoutes: FastifyPluginAsync = async (app) => {
       const { rows } = await app.db.query(
         `INSERT INTO users (email, full_name, role, plan_code, active, password_hash)
          VALUES ($1, $2, 'member', $3, $4, $5)
-         ON CONFLICT (email) DO NOTHING
+         ON CONFLICT (lower(email)) DO NOTHING
          RETURNING id, email, full_name AS "fullName", plan_code AS "planCode", active`,
-        [email, fullName, planCode, active, await hashPassword(password)],
+        [email.toLowerCase(), fullName, planCode, active, await hashPassword(password)],
       );
       if (!rows[0]) {
         throw new ApiError(409, 'EMAIL_TAKEN', 'A member with that email already exists.');
