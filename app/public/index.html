@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ClaimPay</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%273%27 fill=%27%231f5a8a%27/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="topbar">
+      <span class="brand">ClaimPay</span>
+      <div id="who" class="who" hidden>
+        <span id="who-name"></span>
+        <button type="button" id="sign-out">Sign out</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- Sign in -->
+      <section id="view-sign-in" class="view" aria-labelledby="sign-in-heading">
+        <h1 id="sign-in-heading">Sign in</h1>
+        <form id="sign-in-form" novalidate>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="username" required />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
+          <p id="sign-in-error" class="error" role="alert"></p>
+          <button type="submit">Sign in</button>
+        </form>
+      </section>
+
+      <!-- Member -->
+      <section id="view-member" class="view" hidden aria-labelledby="member-heading">
+        <h1 id="member-heading">My claims</h1>
+
+        <form id="claim-form" aria-labelledby="new-claim-heading" novalidate>
+          <h2 id="new-claim-heading">Submit a claim</h2>
+          <div class="field">
+            <label for="procedure-code">Procedure</label>
+            <select id="procedure-code" name="procedureCode" required></select>
+            <p id="procedure-code-error" class="error"></p>
+          </div>
+          <div class="field">
+            <label for="service-date">Service date</label>
+            <input id="service-date" name="serviceDate" type="date" required />
+            <p id="service-date-error" class="error"></p>
+          </div>
+          <div class="field">
+            <label for="billed-amount">Billed amount (USD)</label>
+            <input
+              id="billed-amount"
+              name="billedAmount"
+              type="text"
+              inputmode="decimal"
+              placeholder="0.00"
+              required
+            />
+            <p id="billed-amount-error" class="error"></p>
+          </div>
+          <p id="claim-form-error" class="error" role="alert"></p>
+          <button type="submit">Submit claim</button>
+        </form>
+
+        <h2>Claim history</h2>
+        <p id="member-empty" class="muted" hidden>No claims yet.</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Claim history">
+          <table id="member-claims" class="claims" hidden>
+            <caption class="visually-hidden">
+              Your claims, newest first
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Submitted</th>
+                <th scope="col">Procedure</th>
+                <th scope="col">Service date</th>
+                <th scope="col">Billed</th>
+                <th scope="col">Status</th>
+                <th scope="col">Outcome</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Adjuster -->
+      <section id="view-adjuster" class="view" hidden aria-labelledby="adjuster-heading">
+        <h1 id="adjuster-heading">Claims queue</h1>
+        <p id="adjuster-empty" class="muted" hidden>No claims yet.</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Claims queue">
+          <table id="adjuster-claims" class="claims" hidden>
+            <caption class="visually-hidden">
+              All claims, newest first
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Submitted</th>
+                <th scope="col">Member</th>
+                <th scope="col">Procedure</th>
+                <th scope="col">Billed</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <dialog id="decision-dialog" aria-labelledby="decision-heading">
+          <form id="decision-form" method="dialog" novalidate>
+            <h2 id="decision-heading">Decide claim</h2>
+            <p id="decision-summary"></p>
+            <fieldset>
+              <legend>Decision</legend>
+              <label><input type="radio" name="decision" value="APPROVE" checked /> Approve</label>
+              <label><input type="radio" name="decision" value="DENY" /> Deny</label>
+              <label><input type="radio" name="decision" value="PEND" /> Pend</label>
+            </fieldset>
+            <div class="field" id="approved-field">
+              <label for="approved-amount">Approved amount (USD)</label>
+              <input id="approved-amount" type="text" inputmode="decimal" />
+              <p id="approved-amount-error" class="error"></p>
+            </div>
+            <div class="field" id="reason-field" hidden>
+              <label for="reason-code">Reason</label>
+              <select id="reason-code">
+                <option value="">Choose a reason</option>
+                <option value="NOT_COVERED">Not covered</option>
+                <option value="MISSING_INFORMATION">Missing information</option>
+                <option value="DUPLICATE_CLAIM">Duplicate claim</option>
+                <option value="OUT_OF_NETWORK">Out of network</option>
+              </select>
+              <p id="reason-code-error" class="error"></p>
+            </div>
+            <p id="decision-error" class="error" role="alert"></p>
+            <div class="actions">
+              <button type="button" id="decision-cancel">Cancel</button>
+              <button type="submit">Save decision</button>
+            </div>
+          </form>
+        </dialog>
+      </section>
+    </main>
+
+    <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

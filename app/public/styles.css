@@ -1,0 +1,205 @@
+:root {
+  --ink: #1f2933;
+  --muted: #52606d;
+  --line: #cbd2d9;
+  --accent: #1f5a8a;
+  --accent-ink: #ffffff;
+  --error: #a4232b;
+  --bg: #ffffff;
+  --bg-soft: #f5f7fa;
+  --focus: #e8a317;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Any rule that sets display (like .who) would otherwise win over the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  font:
+    16px/1.5 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  top: 8px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 8px 12px;
+}
+.skip-link:focus {
+  left: 8px;
+  z-index: 10;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+.brand {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+.who {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 16px;
+}
+h2 {
+  font-size: 1.125rem;
+  margin: 24px 0 12px;
+}
+
+form {
+  max-width: 420px;
+}
+.field {
+  margin-bottom: 16px;
+}
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+input,
+select {
+  width: 100%;
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+}
+input[aria-invalid='true'],
+select[aria-invalid='true'] {
+  border-color: var(--error);
+}
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 0 0 16px;
+}
+fieldset label {
+  font-weight: 400;
+  margin: 4px 0;
+}
+
+button {
+  font: inherit;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+button[type='button'] {
+  background: var(--bg);
+  color: var(--accent);
+}
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.error {
+  color: var(--error);
+  margin: 4px 0 0;
+  min-height: 1.5em;
+}
+.error:empty {
+  display: none;
+}
+.muted {
+  color: var(--muted);
+}
+
+/* Tables scroll sideways on narrow screens instead of breaking the page layout. */
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 8px;
+}
+.claims {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+.claims th,
+.claims td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.claims th {
+  background: var(--bg-soft);
+}
+.amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+}
+
+dialog {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 24px;
+  max-width: 480px;
+  width: calc(100% - 32px);
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
