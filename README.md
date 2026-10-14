@@ -1,12 +1,27 @@
 # claims-platform-test-automation
 
-Test automation for ClaimPay, a small made-up healthcare claims and payments app that lives in this repo. The app is the thing under test; the tests and the decisions behind them are the point.
+[![CI](https://github.com/Rafiq2020123/claims-platform-test-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/Rafiq2020123/claims-platform-test-automation/actions/workflows/ci.yml)
 
-**Status:** being built in stages. This README only describes what exists today and will grow as each stage lands.
+A test automation suite for ClaimPay, a small healthcare claims and payments app that lives in this repo. Members submit claims, an adjuster approves or denies them and records payments. The app is made up; the testing is done the way I'd do it on a real team.
+
+What to look at, if you have five minutes:
+
+- **The rules are the oracle.** [docs/business-rules.md](docs/business-rules.md) has 13 hand-calculated payment examples. The unit and API tests read their expected values from that file at run time, so the app never gets a say in what the right answer is.
+- **Four layers, each where it's cheapest.** Unit, API with the database checked, Pact contract over the UI's real client, and a small Playwright suite. [docs/risk-map.md](docs/risk-map.md) says which risk lives in which layer and why.
+- **A planted defect, caught.** Turn on `DEMO_DEFECT=payment-rounding` and exactly the two half-cent Playwright tests fail. [docs/investigations/001-payment-mismatch.md](docs/investigations/001-payment-mismatch.md) follows one failure from the report, through the correlation ID, to the database row.
+- **What isn't tested is written down.** [docs/check-record.md](docs/check-record.md) and [docs/ai-log.md](docs/ai-log.md), including two independent reviews and every finding they made.
+
+![Written rules feed four test layers, which feed one CI gate](docs/images/how-it-fits.svg)
+
+| Member | Adjuster |
+|---|---|
+| ![Member view: submit a claim and see its history, including a payment of $22.55 on a $25.05 claim](docs/images/member-view.png) | ![Adjuster deciding a claim in a dialog](docs/images/adjuster-decision.png) |
+
+Built in stages. This README describes only what exists today.
 
 ## Run it
 
-You need Docker.
+You need Docker. To run the tests or the app outside Docker you also need Node 22 or newer.
 
 ```bash
 docker compose up --build
@@ -91,7 +106,7 @@ Pact's own OpenAPI-style response checking is deliberately not used here. The co
 
 ## Where this stands
 
-Stage 1 is built. What was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Two items wait on the repository becoming public: branch protection with required checks and a public report link. Both are limits of a private repository on the free GitHub plan, not of the repo; the checks already run on every pull request, they just cannot block a merge yet.
+Stage 1 is built. What was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Next: Python and SQL release checks (Stage 2), then a Java slice (Stage 3).
 
 ## License
 
