@@ -3,7 +3,7 @@
 What was checked before calling the first release done, with the command, where it ran, and
 the result. "Not tested" means exactly that; it is not a soft pass.
 
-Last updated 2026-10-13, at the commit of PR 10. Every row is re-checked when something it
+Last updated 2026-10-13, after PR 11. Every row is re-checked when something it
 depends on changes.
 
 | # | Check | How | Result |
@@ -11,7 +11,7 @@ depends on changes.
 | 1 | Fresh clone works with the documented commands | `git clone`, `npm ci`, `npx playwright install chromium`, `docker compose up -d db`, `npm run db:migrate`, `npm run db:seed`, `npm test` | **Passed in CI** (GitHub's runner is a fresh machine every time). **On Windows** (Rafiq's machine, Node 24, PowerShell): `npm ci` and `npm run test:unit` pass, 90/90, including the worked-examples parse that read 0 rows before the CRLF fix. Two things it found that weren't bugs in the repo: Node 18 was installed (the project needs 22+, now said in the README), and PowerShell's script policy blocks `npm.ps1` (`npm.cmd` works). API, contract and Playwright layers **not yet run on Windows**; they need a database. |
 | 2 | Healthy build: every suite green | CI on `main` | **Passed.** Unit 90, API 69, contract 9 + provider verification, Playwright 18. |
 | 3 | Planted defect caught, for the right reason | Playwright against `DEMO_DEFECT=payment-rounding` | **Passed.** Exactly 2 of 18 fail, with `$22.54` and `$6.69` in place of `$22.55` and `$6.70`. Both are amount assertions, not setup. Run locally; the on-demand workflow `Demo - planted defect` records the same on GitHub. |
-| 4 | Merge gate: a failing check actually blocks a merge | Ruleset on `main` with the six CI jobs required | **Not yet.** The repo is public as of PR 10, so this is now possible; the ruleset is being set up and a blocked merge will be recorded here. Until then, CI runs but does not block. |
+| 4 | Merge gate: a failing check actually blocks a merge | Branch protection on `main`: pull request required, branch up to date, six jobs required (static-checks, unit-tests, api-tests, contract-tests, e2e-tests, App starts in Docker). Then [PR #11](https://github.com/Rafiq2020123/claims-platform-test-automation/pull/11) made the payment route always truncate, as if someone had committed the planted defect for real. | **Passed.** GitHub marked #11 blocked. api-tests failed on exactly the five half-cent rows (3, 4, 9, 10, 11); e2e-tests failed on exactly the two amount tests. unit-tests passed, which is right: they test the formula, and the bug was in the route that chooses the rounding mode. That is the case for having the API layer. #11 was closed, not merged. |
 | 5 | Flaky handling: a pass on retry is visible as flaky | `scripts/flaky-summary.mjs` on the JSON report, in the job summary | **Passed.** Script verified on a real report with a status edited to `flaky`; the test appears by name. No real flaky test has occurred in 8 full CI runs. |
 | 6 | Parallel runs don't collide | 5 consecutive runs, 4 workers, fresh members per test | **Passed.** 85/85. |
 | 7 | Tests wait on state, not time | Playwright against `DEMO_LATENCY_MS=400` | **Passed.** 18/18, no failures. |
@@ -27,6 +27,6 @@ depends on changes.
 
 ## Order of remaining work
 
-1. Ruleset and a recorded blocked merge (#4), then Pages (#13).
+1. Pages (#13).
 2. Walkthrough (#16).
 3. The rest of #1 on Windows (API, contract, Playwright) once Docker is set up there. Not blocking: CI covers these layers on every run.
