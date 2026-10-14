@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="300" viewBox="0 0 960 300" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <title>Written rules feed four test layers, which feed one CI gate</title>
+  <!-- Own background so it reads the same in GitHub's light and dark themes. -->
+  <rect width="960" height="300" rx="8" fill="#FAF7F5"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4A1A1F"/>
+    </marker>
+  </defs>
+
+  <!-- The oracle -->
+  <rect x="24" y="40" width="220" height="220" rx="6" fill="#fff" stroke="#4A1A1F" stroke-width="1.5"/>
+  <text x="44" y="72" font-size="13" font-weight="600" letter-spacing="1" fill="#4A1A1F">WRITTEN RULES</text>
+  <text x="44" y="102" font-size="16" fill="#262323">business-rules.md</text>
+  <text x="44" y="126" font-size="16" fill="#262323">13 hand-calculated</text>
+  <text x="44" y="148" font-size="16" fill="#262323">payment examples</text>
+  <text x="44" y="190" font-size="13" fill="#6B6060">Tests read the expected</text>
+  <text x="44" y="208" font-size="13" fill="#6B6060">values from this file.</text>
+  <text x="44" y="226" font-size="13" fill="#6B6060">The app never decides</text>
+  <text x="44" y="244" font-size="13" fill="#6B6060">what's correct.</text>
+
+  <line x1="244" y1="150" x2="290" y2="150" stroke="#4A1A1F" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Layers -->
+  <g font-size="15">
+    <rect x="296" y="40" width="130" height="40" rx="4" fill="#fff" stroke="#4A1A1F" stroke-width="1.5"/>
+    <text x="361" y="65" text-anchor="middle" fill="#4A1A1F" font-weight="600">Unit</text>
+    <text x="442" y="65" fill="#6B6060" font-size="14">formula, status matrix, validation</text>
+
+    <rect x="296" y="100" width="130" height="40" rx="4" fill="#fff" stroke="#4A1A1F" stroke-width="1.5"/>
+    <text x="361" y="125" text-anchor="middle" fill="#4A1A1F" font-weight="600">API + DB</text>
+    <text x="442" y="125" fill="#6B6060" font-size="14">real app, saved rows, idempotency races</text>
+
+    <rect x="296" y="160" width="130" height="40" rx="4" fill="#fff" stroke="#4A1A1F" stroke-width="1.5"/>
+    <text x="361" y="185" text-anchor="middle" fill="#4A1A1F" font-weight="600">Contract</text>
+    <text x="442" y="185" fill="#6B6060" font-size="14">Pact over the UI's real API client</text>
+
+    <rect x="296" y="220" width="130" height="40" rx="4" fill="#fff" stroke="#4A1A1F" stroke-width="1.5"/>
+    <text x="361" y="245" text-anchor="middle" fill="#4A1A1F" font-weight="600">Playwright</text>
+    <text x="442" y="245" fill="#6B6060" font-size="14">journeys, access, axe accessibility</text>
+  </g>
+
+  <line x1="740" y1="150" x2="786" y2="150" stroke="#4A1A1F" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Gate -->
+  <rect x="792" y="90" width="144" height="120" rx="6" fill="#4A1A1F"/>
+  <text x="864" y="138" text-anchor="middle" font-size="17" font-weight="600" fill="#fff">CI gate</text>
+  <text x="864" y="162" text-anchor="middle" font-size="13" fill="#fff" fill-opacity="0.85">every pull request,</text>
+  <text x="864" y="180" text-anchor="middle" font-size="13" fill="#fff" fill-opacity="0.85">real PostgreSQL</text>
+</svg>

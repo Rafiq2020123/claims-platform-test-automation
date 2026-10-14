@@ -111,8 +111,16 @@ fieldset {
   margin: 0 0 16px;
 }
 fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 400;
   margin: 4px 0;
+}
+/* The full-width rule above is for text inputs; it stretched the radios off their labels. */
+input[type='radio'] {
+  width: auto;
+  margin: 0;
 }
 
 button {
