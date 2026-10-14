@@ -19,6 +19,10 @@ export interface Response<T = unknown> {
   correlationId: string | null;
 }
 
+// Every API test runs on this date, so the service-date boundaries don't move under a run that
+// crosses midnight UTC. Tests still read `today` from /api/health rather than hardcoding it.
+export const FIXED_NOW = '2026-10-13T12:00:00.000Z';
+
 export class Harness {
   private constructor(
     readonly config: Config,
@@ -35,7 +39,9 @@ export class Harness {
       ...overrides,
     });
     const db = createPool(config.databaseUrl);
-    const app = buildServer({ ...config, logLevel: 'warn' }, db);
+    const app = buildServer({ ...config, logLevel: 'warn' }, db, {
+      now: () => new Date(FIXED_NOW),
+    });
     const baseUrl = await app.listen({ port: 0, host: '127.0.0.1' });
     return new Harness(config, db, app, baseUrl);
   }

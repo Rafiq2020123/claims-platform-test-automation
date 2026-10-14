@@ -19,9 +19,9 @@ const ROW =
 
 export function workedExamples(): WorkedExample[] {
   const text = readFileSync(RULES_PATH, 'utf8');
-  const section = text.split('### Worked examples')[1]?.split('\n## ')[0] ?? '';
+  const section = text.split('### Worked examples')[1]?.split(/\r?\n## /)[0] ?? '';
   const examples = section
-    .split('\n')
+    .split(/\r?\n/)
     .map((line) => ROW.exec(line))
     .filter((m): m is RegExpExecArray => m !== null)
     .map((m) => ({

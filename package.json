@@ -19,13 +19,14 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:unit": "node --import tsx --test 'tests/unit/**/*.test.ts'",
+    "test:unit": "node --import tsx --test \"tests/unit/**/*.test.ts\"",
     "test": "npm run test:unit && npm run test:api && npm run test:contract && npm run test:e2e",
     "test:contract:consumer": "node --import tsx --test tests/contract/consumer.test.ts",
     "test:contract:provider": "node --env-file-if-exists=.env --import tsx --test tests/contract/provider.test.ts",
     "test:contract": "npm run test:contract:consumer && npm run test:contract:provider",
     "test:e2e": "playwright test --project=chromium",
-    "test:api": "node --env-file-if-exists=.env --import tsx --test 'tests/api/**/*.test.ts'"
+    "test:e2e:quarantine": "playwright test --config playwright.quarantine.config.ts --project=chromium --pass-with-no-tests",
+    "test:api": "node --env-file-if-exists=.env --import tsx --test \"tests/api/**/*.test.ts\""
   },
   "dependencies": {
     "@fastify/static": "^10.1.6",

@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import {
-  MAX_BILLED_CENTS,
-  MAX_SERVICE_AGE_DAYS,
-  validateClaim,
-} from '../../app/src/domain/claim-validation.js';
+import { validateClaim } from '../../app/src/domain/claim-validation.js';
 
+// The boundaries below are written out as numbers from docs/business-rules.md §4 on purpose.
+// Importing the app's own limits would make a changed limit pass its own test.
 const TODAY = '2026-10-13';
 const CODES = new Set(['PC-1001', 'PC-2001']);
 
@@ -25,8 +23,8 @@ describe('validateClaim', () => {
     const cases: [unknown, boolean][] = [
       [0, false],
       [1, true],
-      [MAX_BILLED_CENTS, true],
-      [MAX_BILLED_CENTS + 1, false],
+      [10_000_000, true],
+      [10_000_001, false],
       [12.5, false],
       ['100', false],
       [-100, false],
@@ -44,8 +42,8 @@ describe('validateClaim', () => {
     const cases: [string, unknown, boolean][] = [
       ['today', daysAgo(0), true],
       ['tomorrow', daysAgo(-1), false],
-      [`${MAX_SERVICE_AGE_DAYS} days ago`, daysAgo(MAX_SERVICE_AGE_DAYS), true],
-      [`${MAX_SERVICE_AGE_DAYS + 1} days ago`, daysAgo(MAX_SERVICE_AGE_DAYS + 1), false],
+      ['365 days ago', daysAgo(365), true],
+      ['366 days ago', daysAgo(366), false],
       ['not a date', 'yesterday', false],
       ['impossible date', '2026-02-30', false],
       ['wrong format', '10/12/2026', false],

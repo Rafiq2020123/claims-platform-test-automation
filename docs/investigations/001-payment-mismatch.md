@@ -8,7 +8,7 @@ Date: 2026-10-13. App at the commit of PR 8. Chromium. The IDs below are from on
 
 ## Symptom
 
-One Playwright test fails. The other 16 pass.
+Two Playwright tests fail, both amount checks, the other 15 pass. This follows the first of the two; the second has the same cause.
 
 ```
 ✘ adjuster queue › approve, then record a payment, and see the computed amount

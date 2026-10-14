@@ -185,6 +185,10 @@ $('claim-form').addEventListener('submit', async (event) => {
     return;
   }
 
+  // If the account changes while this request is in flight (sign out, sign in as someone
+  // else), the answer belongs to the old session: don't reset the new one's form or announce
+  // the old one's result.
+  const epoch = sessionEpoch;
   await whileSubmitting(form, async () => {
     try {
       const claim = await api.submitClaim({
@@ -192,10 +196,12 @@ $('claim-form').addEventListener('submit', async (event) => {
         serviceDate: form.serviceDate.value,
         billedCents,
       });
+      if (epoch !== sessionEpoch) return;
       form.reset();
       announce(`Claim submitted for ${formatCents(claim.billedCents)}.`);
       await renderMemberClaims();
     } catch (error) {
+      if (epoch !== sessionEpoch) return;
       if (error instanceof ApiError && error.code === 'VALIDATION_FAILED') {
         setFieldError('procedure-code', error.fields.procedureCode);
         setFieldError('service-date', error.fields.serviceDate);
@@ -305,13 +311,16 @@ $('decision-form').addEventListener('submit', async (event) => {
   }
   if (decision === 'DENY') body.reasonCode = $('reason-code').value;
 
+  const epoch = sessionEpoch;
   await whileSubmitting(form, async () => {
     try {
       const updated = await api.decideClaim(claimBeingDecided.id, body);
+      if (epoch !== sessionEpoch) return;
       $('decision-dialog').close();
       announce(`Claim ${humanize(updated.status).toLowerCase()}.`);
       await renderAdjusterClaims();
     } catch (error) {
+      if (epoch !== sessionEpoch) return;
       if (error instanceof ApiError && error.code === 'VALIDATION_FAILED') {
         setFieldError('approved-amount', error.fields.approvedCents);
         setFieldError('reason-code', error.fields.reasonCode);
@@ -330,12 +339,15 @@ const paymentKeys = new Map();
 async function recordPayment(claim, button) {
   button.disabled = true;
   if (!paymentKeys.has(claim.id)) paymentKeys.set(claim.id, crypto.randomUUID());
+  const epoch = sessionEpoch;
   try {
     const payment = await api.recordPayment(claim.id, paymentKeys.get(claim.id));
     paymentKeys.delete(claim.id);
+    if (epoch !== sessionEpoch) return;
     announce(`Payment of ${formatCents(payment.amountCents)} recorded.`);
     await renderAdjusterClaims();
   } catch (error) {
+    if (epoch !== sessionEpoch) return;
     button.disabled = false;
     announce(describe(error));
   }

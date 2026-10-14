@@ -45,7 +45,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "type"
+                  "match": "regex",
+                  "regex": "^Bearer .+$"
                 }
               ]
             }
@@ -132,7 +133,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "type"
+                  "match": "regex",
+                  "regex": "^Bearer .+$"
                 }
               ]
             },
@@ -152,23 +154,10 @@
       "response": {
         "body": {
           "content": {
-            "amountCents": 8000,
-            "approvedCents": 12500,
-            "claimId": "aaaaaaaa-0000-4000-8000-000000000001",
-            "copayCents": 2000,
-            "coverageBp": 8000,
-            "createdAt": "2026-10-13T12:00:00.000Z",
-            "id": "e2490de5-5bd3-43d5-b7c4-526e33f71304"
+            "amountCents": 8000
           },
           "contentType": "application/json",
           "encoded": false
-        },
-        "generators": {
-          "body": {
-            "$.id": {
-              "type": "Uuid"
-            }
-          }
         },
         "headers": {
           "Content-Type": [
@@ -182,56 +171,6 @@
               "matchers": [
                 {
                   "match": "integer"
-                }
-              ]
-            },
-            "$.approvedCents": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "integer"
-                }
-              ]
-            },
-            "$.claimId": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "regex",
-                  "regex": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-                }
-              ]
-            },
-            "$.copayCents": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "integer"
-                }
-              ]
-            },
-            "$.coverageBp": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "integer"
-                }
-              ]
-            },
-            "$.createdAt": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$.id": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "regex",
-                  "regex": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
                 }
               ]
             }
@@ -264,7 +203,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "type"
+                  "match": "regex",
+                  "regex": "^Bearer .+$"
                 }
               ]
             }
@@ -276,19 +216,10 @@
       "response": {
         "body": {
           "content": {
-            "amountCents": 8000,
-            "claimId": "aaaaaaaa-0000-4000-8000-000000000001",
-            "id": "e2490de5-5bd3-43d5-b7c4-526e33f71304"
+            "amountCents": 8000
           },
           "contentType": "application/json",
           "encoded": false
-        },
-        "generators": {
-          "body": {
-            "$.id": {
-              "type": "Uuid"
-            }
-          }
         },
         "headers": {
           "Content-Type": [
@@ -302,24 +233,6 @@
               "matchers": [
                 {
                   "match": "integer"
-                }
-              ]
-            },
-            "$.claimId": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "regex",
-                  "regex": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-                }
-              ]
-            },
-            "$.id": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "regex",
-                  "regex": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
                 }
               ]
             }
@@ -352,7 +265,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "type"
+                  "match": "regex",
+                  "regex": "^Bearer .+$"
                 }
               ]
             }
@@ -373,8 +287,7 @@
               "memberId": "e2490de5-5bd3-43d5-b7c4-526e33f71304",
               "procedureCode": "PC-1001",
               "serviceDate": "2026-10-10",
-              "status": "SUBMITTED",
-              "updatedAt": "2026-10-13T12:00:00.000Z"
+              "status": "SUBMITTED"
             }
           ],
           "contentType": "application/json",
@@ -454,14 +367,6 @@
               ]
             },
             "$[*].status": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$[*].updatedAt": {
               "combine": "AND",
               "matchers": [
                 {
@@ -730,7 +635,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "type"
+                  "match": "regex",
+                  "regex": "^Bearer .+$"
                 }
               ]
             }
@@ -750,8 +656,7 @@
             "memberId": "e2490de5-5bd3-43d5-b7c4-526e33f71304",
             "procedureCode": "PC-1001",
             "serviceDate": "2026-10-10",
-            "status": "SUBMITTED",
-            "updatedAt": "2026-10-13T12:00:00.000Z"
+            "status": "SUBMITTED"
           },
           "contentType": "application/json",
           "encoded": false
@@ -827,14 +732,6 @@
                   "match": "type"
                 }
               ]
-            },
-            "$.updatedAt": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
             }
           }
         },
@@ -876,7 +773,8 @@
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "type"
+                  "match": "regex",
+                  "regex": "^Bearer .+$"
                 }
               ]
             }
@@ -896,8 +794,7 @@
             "memberId": "e2490de5-5bd3-43d5-b7c4-526e33f71304",
             "procedureCode": "PC-1001",
             "serviceDate": "2026-10-10",
-            "status": "APPROVED",
-            "updatedAt": "2026-10-13T12:00:00.000Z"
+            "status": "APPROVED"
           },
           "contentType": "application/json",
           "encoded": false
@@ -967,14 +864,6 @@
               ]
             },
             "$.serviceDate": {
-              "combine": "AND",
-              "matchers": [
-                {
-                  "match": "type"
-                }
-              ]
-            },
-            "$.updatedAt": {
               "combine": "AND",
               "matchers": [
                 {

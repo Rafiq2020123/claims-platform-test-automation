@@ -80,6 +80,12 @@ describe('payment idempotency', () => {
     assert.deepEqual(rows, [{ n: 1 }]);
   });
 
+  // Five requests fired together from one process. The client can't prove they overlapped
+  // inside the server; what this does prove is that whatever the overlap was, one row came
+  // out and every caller got the same payment back. Checked by removing the advisory lock from
+  // the route: this case still passed (the requests serialised on their own that run), the
+  // two-claim race below did not (500, unique violation). So the test after this one is the
+  // one that actually pins the lock; this one pins the replay behaviour.
   it('five concurrent requests with one key produce one payment', async () => {
     const claim = await h.approvedClaim(member, adjuster, 1000);
     const key = randomUUID();
@@ -88,7 +94,17 @@ describe('payment idempotency', () => {
     );
     const statuses = results.map((r) => r.status).sort();
     assert.deepEqual(statuses, [200, 200, 200, 200, 201]);
-    assert.equal(new Set(results.map((r) => r.body.id)).size, 1);
+
+    const bodies = results.map((r) => JSON.stringify(r.body));
+    assert.equal(new Set(bodies).size, 1, 'every caller gets the identical payment');
+
+    const { rows } = await h.db.query<{ n: string; status: string }>(
+      `SELECT (SELECT count(*) FROM payments WHERE claim_id = $1) AS n, status
+       FROM claims WHERE id = $1`,
+      [claim.id],
+    );
+    assert.equal(Number(rows[0]!.n), 1);
+    assert.equal(rows[0]!.status, 'PAID');
   });
 
   it('a key reused on a different claim is 422, also when the two requests race', async () => {
@@ -100,10 +116,22 @@ describe('payment idempotency', () => {
     const [ra, rb] = await Promise.all([h.pay(adjuster, a.id, key), h.pay(adjuster, b.id, key)]);
     assert.deepEqual([ra.status, rb.status].sort(), [201, 422]);
 
-    const { rows } = await h.db.query('SELECT claim_id FROM payments WHERE idempotency_key = $1', [
-      key,
-    ]);
+    const { rows } = await h.db.query<{ claim_id: string }>(
+      'SELECT claim_id FROM payments WHERE idempotency_key = $1',
+      [key],
+    );
     assert.equal(rows.length, 1);
+
+    // The winner is paid, the loser is untouched and still approved.
+    const winner = rows[0]!.claim_id;
+    const loser = winner === a.id ? b.id : a.id;
+    const states = await h.db.query<{ id: string; status: string }>(
+      'SELECT id, status FROM claims WHERE id = ANY($1)',
+      [[a.id, b.id]],
+    );
+    const byId = new Map(states.rows.map((r) => [r.id, r.status]));
+    assert.equal(byId.get(winner), 'PAID');
+    assert.equal(byId.get(loser), 'APPROVED');
   });
 
   it('a paid claim cannot be paid again with a new key', async () => {

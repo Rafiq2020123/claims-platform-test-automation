@@ -16,6 +16,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     config: Config;
     db: Db;
+    now: () => Date;
   }
   interface FastifyRequest {
     session: Session | null;
@@ -30,7 +31,14 @@ declare module 'fastify' {
 // Anything outside this pattern is replaced, so a caller can't inject junk into the logs.
 const CORRELATION_ID = /^[A-Za-z0-9._-]{1,100}$/;
 
-export function buildServer(config: Config, db: Db): FastifyInstance {
+export interface ServerOptions {
+  // Where the server gets the time from. Production uses the real clock; tests that depend on
+  // the service-date window pass a fixed one, so a run that crosses midnight UTC can't flake and
+  // the committed contract stays valid after a year.
+  now?: () => Date;
+}
+
+export function buildServer(config: Config, db: Db, options: ServerOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: { level: config.logLevel },
     requestIdHeader: false,
@@ -43,6 +51,7 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
 
   app.decorate('config', config);
   app.decorate('db', db);
+  app.decorate('now', options.now ?? (() => new Date()));
   app.decorateRequest('session', null);
 
   // Some clients send a bodiless POST as a chunked, empty stream with no content type. That is
@@ -51,6 +60,17 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
     if (body.length === 0) done(null, undefined);
     else done(new ApiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Send JSON.'), undefined);
   });
+
+  if (config.demoLatencyMs > 0) {
+    app.log.warn({ demoLatencyMs: config.demoLatencyMs }, 'DEMO_LATENCY_MS is on');
+    // Registered before the auth hook on purpose. Hooks run in order and a throw stops the
+    // chain, so if this came second a 401 or 403 would skip the delay. Being first, every
+    // API response is delayed, including the error ones.
+    app.addHook('onRequest', async (request) => {
+      if (!request.url.startsWith('/api/')) return;
+      await new Promise((resolve) => setTimeout(resolve, config.demoLatencyMs));
+    });
+  }
 
   app.addHook('onRequest', async (request, reply) => {
     reply.header('x-correlation-id', request.id);
@@ -62,14 +82,6 @@ export function buildServer(config: Config, db: Db): FastifyInstance {
     if (roles) requireRole(request, ...roles);
   });
 
-  if (config.demoLatencyMs > 0) {
-    app.log.warn({ demoLatencyMs: config.demoLatencyMs }, 'DEMO_LATENCY_MS is on');
-    // onRequest runs before parsing and validation, so error responses are delayed too.
-    app.addHook('onRequest', async (request) => {
-      if (!request.url.startsWith('/api/')) return;
-      await new Promise((resolve) => setTimeout(resolve, config.demoLatencyMs));
-    });
-  }
   if (config.demoDefect) {
     app.log.warn({ demoDefect: config.demoDefect }, 'DEMO_DEFECT is on');
   }
