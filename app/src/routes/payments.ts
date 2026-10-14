@@ -63,7 +63,7 @@ export const paymentRoutes: FastifyPluginAsync = async (app) => {
         const plan = planRows[0];
         if (!plan) throw new Error(`Member ${claim.memberId} has no plan`);
 
-        const rounding = app.config.demoDefect === 'payment-rounding' ? 'truncate' : 'half-up';
+        const rounding = 'truncate'; // deliberately wrong: proves the gate blocks this PR
         const amountCents = calculatePayment(claim.approvedCents, plan, rounding);
 
         const { rows } = await client.query<PaymentRow>(
