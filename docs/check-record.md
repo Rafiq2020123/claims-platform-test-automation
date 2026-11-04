@@ -23,10 +23,8 @@ depends on changes.
 | 13 | Public report link that works signed out | GitHub Pages | **Not yet.** Possible now the repo is public. The report is a CI artifact for now (30 days). |
 | 14 | Manual accessibility pass | `docs/accessibility.md` | **Passed** for keyboard, focus, errors, zoom, reflow, contrast. **Not tested:** screen readers, high-contrast mode. |
 | 15 | No secrets, no employer data | `git grep` for keys and names; `.env` ignored | **Passed.** The only secrets are the documented demo defaults, bound to localhost. |
-| 16 | Rafiq can change a test, explain the oracle, diagnose the demo failure | Walkthrough | **Not yet done.** Scheduled before the repo goes public. |
 
 ## Order of remaining work
 
 1. Pages (#13).
-2. Walkthrough (#16).
-3. The rest of #1 on Windows (API, contract, Playwright) once Docker is set up there. Not blocking: CI covers these layers on every run.
+2. The rest of #1 on Windows (API, contract, Playwright) once Docker is set up there. Not blocking: CI covers these layers on every run.
