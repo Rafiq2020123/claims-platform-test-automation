@@ -57,10 +57,12 @@ every layer against a real database.
 ## 3. When a test fails
 
 1. **Read the assertion.** Expected vs received, and which line. Most failures end here.
-2. **API or contract test:** the error body includes a `correlationId`. Search the app's log
-   for it (`docker compose logs app | grep <id>`) to see the request's path through the server,
-   then look at the row: `claims.correlation_id` and `payments.correlation_id` carry the ID of
-   the last change.
+2. **API or contract test:** the error body includes a `correlationId`. These suites start
+   their own server in-process (not the Docker one) with logging at `warn`, so for them the
+   trail is the error body and then the row: `claims.correlation_id` and
+   `payments.correlation_id` carry the ID of the last change. The server log step applies when
+   the app is running on its own (Playwright, or manual checks): `docker compose logs app | grep
+   <id>`, or the terminal running `npm run dev` with `LOG_LEVEL=debug`.
 3. **Playwright test:** open the HTML report (`npx playwright show-report`; it is written on
    every run, locally and in CI). A failed test has a screenshot, a trace (step by step, with
    network), and an attachment named `api-calls-with-correlation-ids` listing every API call
