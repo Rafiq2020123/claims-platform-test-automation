@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claimpay-release-check"
+version = "0.1.0"
+description = "Release checks for a running ClaimPay: API behaviour against the written rules"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.31"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+claimpay-release-check = "claimpay_release_check.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["claimpay_release_check*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
