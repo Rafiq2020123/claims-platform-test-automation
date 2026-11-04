@@ -10,9 +10,10 @@ pipeline, one gate.
 
 ## Integer cents and basis points, BigInt for the product
 
-Floating point is wrong for money, and the one place it would bite here (approved × rate at the
-top of the range) is exactly the place a test would be least likely to try. BigInt costs one
-line and removes the question.
+Floating point is wrong for money. At this app's limits the product (10,000,000 cents × 10,000
+basis points = 10^11) still fits a JavaScript integer exactly, so BigInt is not strictly needed
+today. It costs one line, makes the arithmetic explicitly integer, and means a larger range
+later never reopens the question. That is the trade, not a correctness fix.
 
 ## Fixtures over base classes in Playwright
 

@@ -8,7 +8,7 @@ What to look at, if you have five minutes:
 
 - **The rules are the oracle.** [docs/business-rules.md](docs/business-rules.md) has 13 hand-calculated payment examples. The unit and API tests read their expected values from that file at run time, so the app never gets a say in what the right answer is.
 - **Four layers, each where it's cheapest.** Unit, API with the database checked, Pact contract over the UI's real client, and a small Playwright suite. [docs/risk-map.md](docs/risk-map.md) says which risk lives in which layer and why.
-- **A planted defect, caught.** Turn on `DEMO_DEFECT=payment-rounding` and exactly the two half-cent Playwright tests fail. [docs/investigations/001-payment-mismatch.md](docs/investigations/001-payment-mismatch.md) follows one failure from the report, through the correlation ID, to the database row.
+- **A planted defect, caught.** Turn on `DEMO_DEFECT=payment-rounding` and exactly the two rounding-sensitive Playwright tests fail. [docs/investigations/001-payment-mismatch.md](docs/investigations/001-payment-mismatch.md) follows one failure from the report, through the correlation ID, to the database row.
 - **What isn't tested is written down.** [docs/check-record.md](docs/check-record.md) and [docs/ai-log.md](docs/ai-log.md), including two independent reviews and every finding they made.
 
 ![Written rules feed four test layers, which feed one CI gate](docs/images/how-it-fits.svg)
@@ -76,7 +76,7 @@ Every response carries an `X-Correlation-Id` header. Send your own to follow a r
 
 ## The UI
 
-Two roles, one page. A member signs in, submits claims and sees decisions and payments. An adjuster sees the queue, decides claims and records payments. It is written to be accessible first: real labels, field errors tied to their inputs, focus moved to the first problem, a live region for results, keyboard-reachable everything. The UI's only path to the API is [app/public/api-client.js](app/public/api-client.js). The contract tests, when they land, will run that file rather than a copy of it.
+Two roles, one page. A member signs in, submits claims and sees decisions and payments. An adjuster sees the queue, decides claims and records payments. It is written to be accessible first: real labels, field errors tied to their inputs, focus moved to the first problem, a live region for results, keyboard-reachable everything. The UI's only path to the API is [app/public/api-client.js](app/public/api-client.js). The contract tests run that file rather than a copy of it.
 
 ## Tests
 
@@ -86,7 +86,7 @@ npm test
 
 **Unit** (`tests/unit`): the rules that don't need a database. The payment tests read their expected values from the worked-examples table in `docs/business-rules.md` at run time, so the document is the oracle and can't drift from the tests. Two deliberate mutations were run while writing them: truncating instead of rounding half up fails 5 tests; allowing SUBMITTED → PAID fails 2.
 
-**API** (`tests/api`, needs a database): the real app, started in-process on a random port, with direct database access to check what was saved. Access rules (R1), every validation boundary (R2), the full status matrix through the real endpoints with the row checked after each move (R3), all 13 payment examples end to end against the saved row (R4), and idempotency including five concurrent requests with one key and two claims racing for one key (R5). One case starts the app with the planted defect on and expects exactly the half-cent rows to be short.
+**API** (`tests/api`, needs a database): the real app, started in-process on a random port, with direct database access to check what was saved. Access rules (R1), every validation boundary (R2), the full status matrix through the real endpoints with the row checked after each move (R3), all 13 payment examples end to end against the saved row (R4), and idempotency including five concurrent requests with one key and two claims racing for one key (R5). One case starts the app with the planted defect on and expects exactly the rounding-sensitive rows to be short.
 
 **Contract** (`tests/contract`, needs a database): what the UI sends and the least it needs back, as a Pact contract.
 - `consumer.test.ts` runs the UI's actual `app/public/api-client.js` against a Pact mock and writes `pacts/claimpay-web-claimpay-api.json`. Nine interactions: sign-in (good and bad), procedure codes, claim submission (valid and invalid), listing, decision, payment, payment lookup.
@@ -99,7 +99,7 @@ Pact's own OpenAPI-style response checking is deliberately not used here. The co
 **End to end** (`tests/e2e`, Playwright, needs a database): what a member and an adjuster actually see and do. 18 tests.
 - Test data goes in through the API (`tests/e2e/fixtures/api.ts`). Each test gets its own member, named after the worker, so four workers never touch each other's rows. The suite was run five times in a row with four workers before this landed: 85 passes, 0 failures, about 17 seconds a run.
 - No hard waits. Every assertion is a web-first `expect`. To prove it, the suite was run against the app with `DEMO_LATENCY_MS=400` (every API response 400ms slower): all passes.
-- Expected amounts in the UI come from the worked examples in the rules: row 3 (`$6.70`) and row 9 (`$22.55`), the half-cent cases. Run against the app with `DEMO_DEFECT=payment-rounding`, exactly those two tests fail (`$6.69`, `$22.54`) and the other 16 pass.
+- Expected amounts in the UI come from the worked examples in the rules: row 3 (`$6.70`) and row 9 (`$22.55`), two of the rounding-sensitive cases. Run against the app with `DEMO_DEFECT=payment-rounding`, exactly those two tests fail (`$6.69`, `$22.54`) and the other 16 pass.
 - Retries: one in CI, none locally. A test that passes on retry is reported as flaky, never as passed. Tests tagged `@quarantine` are left out of the gate and run in a separate non-blocking job.
 - On failure the report carries the trace, a screenshot, and the list of API calls the page made with their correlation IDs, so the failing step can be followed into the server log and the database.
 - Accessibility: axe on five page states, tab order, 320px reflow. What was checked by hand is in `docs/accessibility.md`.

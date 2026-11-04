@@ -16,8 +16,8 @@ and that the member page reflows at 320px without horizontal scrolling.
 |---|---|
 | Every control reachable and operable by keyboard alone (Tab, Shift+Tab, Enter, Space, arrow keys in radio groups) | Pass. Skip link is the first stop. The decision dialog traps focus while open and returns focus to the page on close. |
 | Visible focus indicator on every focusable element | **Found and fixed.** The original amber outline (`#e8a317`) was 2.2:1 against white, under the 3:1 non-text minimum, and axe does not check focus indicators. Changed to `#b45309` (5.0:1 on white, 4.7:1 on the grey band). The 2px offset keeps the outline on the page background rather than on the control. |
-| Form errors: announced, tied to their field, focus moved to the first problem | Pass. `aria-invalid` and `aria-describedby` are set; the field receives focus. |
-| Results announced without a page change (claim submitted, decision saved, payment recorded) | Pass, via the polite live region. |
+| Form errors: tied to their field, focus moved to the first problem | Pass by markup inspection. `aria-invalid` and `aria-describedby` are set; the field receives focus. Whether a screen reader actually announces the error is **not tested** (see below). |
+| Results reported without a page change (claim submitted, decision saved, payment recorded) | Pass by markup inspection: the text lands in a polite live region. The announcement itself is **not tested**. |
 | 200% browser zoom | Pass. No clipped text, no overlap; tables scroll inside their own labelled region. |
 | 320px viewport (WCAG 1.4.10 reflow) | Pass, same mechanism as zoom. |
 | Colour contrast of text and controls | Pass. Body text 14.8:1, muted text 6.5:1 (6.0:1 on the grey band), button text on blue 7.3:1, error red 7.4:1, link/accent text 7.3:1. Calculated from the CSS values, not estimated. |
