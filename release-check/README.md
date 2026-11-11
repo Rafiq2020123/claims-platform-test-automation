@@ -1,12 +1,17 @@
 # claimpay-release-check
 
 The checks a release engineer runs against a deployed ClaimPay before calling it good. Python,
-one dependency (`requests`), one command.
+two dependencies (`requests`, `psycopg`), one command.
 
 ```
 pip install -e release-check
-claimpay-release-check --base-url http://127.0.0.1:3000
+claimpay-release-check --base-url http://127.0.0.1:3000 --database-url postgres://...
 ```
+
+Two layers. The API checks prove the running app answers correctly for a few new claims. The
+reconciliation checks read every claim and payment already in the database and ask whether the
+written rules hold for all of them. Both report the same way; `--database-url` (or
+`$DATABASE_URL`) turns the second layer on, `--no-api` runs only that layer.
 
 Exit code `0`: every check passed. `1`: at least one failed; do not release. `2`: the checks
 could not run (app unreachable, rules file not found); fix the check, not the build.
@@ -24,9 +29,32 @@ could not run (app unreachable, rules file not found); fix the check, not the bu
 | access rules hold | no token → 401; another member's claim → 404 with the same error as a missing one; a member cannot decide or pay |
 | bad claims are refused with field errors | a bad claim gets a 400 that names the fields, with a correlation ID |
 
-Every failure prints the reason and the correlation ID of the request that proved it, so it
-can be followed into the server log and the database row the same way as any other failure
-in this repo.
+## What it reconciles
+
+Each is one SQL query that returns the rows breaking the rule. The expected payment is
+recomputed from the claim's approved amount and the member's plan in the `plans` table, never
+read from the payment row, so the data is checked against the rules and not against itself.
+
+| Check | Rule |
+|---|---|
+| plans table matches the rules document | runs first: if the plan terms are wrong, every expected amount would be wrong with them |
+| every payment is the amount the rules give | section 6, `max(0, floor((approved x bp + 5000) / 10000) - copay)` |
+| a payment's recorded inputs match the claim and the plan | the snapshot on the payment row equals the claim's approved amount and the plan's terms |
+| every PAID claim has exactly one payment | section 7 |
+| no payment exists for a claim that is not PAID | section 7 |
+| approved and paid claims carry a valid approved amount; denied claims carry a reason | section 5 |
+| the last status in a claim's history is its current status | section 8 |
+| every status change in the history is an allowed move, in an unbroken chain | section 5, the allowed-moves table |
+| every claim has a history | section 8 |
+
+Every failure, API or database, prints the reason and the correlation ID of the request that
+wrote the row, so it can be followed into the server log the same way as any other failure in
+this repo.
+
+The first time the reconciliation ran here it found two payments a cent short. They were
+written three weeks earlier, by a run of the API checks against the app with the planted
+rounding defect switched on. The app was healthy again, so the API checks passed; the data it
+had written while broken was still wrong. That is the case this layer exists for.
 
 ## What it is not
 
@@ -59,5 +87,10 @@ cd release-check && pip install -e ".[dev]" && python -m pytest
 ```
 
 They cover the rules parser and the formula (all 13 worked examples, and the truncation
-mutation that makes rows 3, 4, 9, 10 and 11 a cent short) and the report. The checks
-themselves are exercised against the real app, in CI, not mocked.
+mutation that makes rows 3, 4, 9, 10 and 11 a cent short), the report, and the reconciliation
+checks against a real database: with `DATABASE_URL` set, each test plants a bad record inside
+a transaction (a payment a cent short, a PAID claim with no payment, a payment on an unpaid
+claim, a history with a step missing, a history that stops before the current status, a
+changed plan table), asserts the right check names the right row, and rolls back. Without
+`DATABASE_URL` those tests are skipped and say so. The API checks themselves are exercised
+against the real app, in CI, not mocked.
