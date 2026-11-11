@@ -14,9 +14,7 @@ from pathlib import Path
 
 # The copay cell reads "$20.00 (2000 cents)" or just "$0.00"; the cents in brackets are optional.
 PLAN_ROW = re.compile(r"^\| (SILVER|GOLD) \| \d+% \((\d+) bp\) \| \$(\d+)\.(\d\d)(?: \((\d+) cents\))? \|")
-EXAMPLE_ROW = re.compile(
-    r"^\| (\d+) \| (SILVER|GOLD) \| (\d+) \| [\d.]+ \| \d+ \| \d+ \| \*\*(\d+)\*\* \| (.+?) \|$"
-)
+EXAMPLE_ROW = re.compile(r"^\| (\d+) \| (SILVER|GOLD) \| (\d+) \| [\d.]+ \| \d+ \| \d+ \| \*\*(\d+)\*\* \| (.+?) \|$")
 
 
 @dataclass(frozen=True)

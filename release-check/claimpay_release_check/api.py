@@ -102,9 +102,7 @@ class Api:
         return self.request("POST", f"/claims/{claim_id}/decision", token=token, json=body)
 
     def pay(self, token: str, claim_id: str, key: str) -> Response:
-        return self.request(
-            "POST", f"/claims/{claim_id}/payment", token=token, headers={"Idempotency-Key": key}
-        )
+        return self.request("POST", f"/claims/{claim_id}/payment", token=token, headers={"Idempotency-Key": key})
 
     def payment(self, token: str, claim_id: str) -> Response:
         return self.request("GET", f"/claims/{claim_id}/payment", token=token)
