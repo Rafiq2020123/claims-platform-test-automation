@@ -27,3 +27,7 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+# Say it outright, so import order is the same whether ruff runs from here or the repo root.
+known-first-party = ["claimpay_release_check"]
