@@ -55,7 +55,7 @@ The app listens on `127.0.0.1` whether it runs natively or through Compose, wher
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Fresh checkout to a useful new test, and what to do when one fails. |
 | [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI on every pull request: typecheck, lint, format, unit, API, contract and Playwright tests against a real Postgres, Docker start-up check. The Playwright report is kept as an artifact; flaky tests are listed in the job summary. |
 | [.github/workflows/demo-defect.yml](.github/workflows/demo-defect.yml) | Run by hand: the Playwright suite against the planted rounding defect. Expected to fail, with the two amount tests named in the job summary. |
-| [release-check/](release-check/) | Stage 2, in Python: the checks a release engineer runs against a deployed ClaimPay. One command, exit code 0/1/2, expected amounts read from the rules at run time. |
+| [release-check/](release-check/) | Stage 2, in Python and SQL: the checks a release engineer runs against a deployed ClaimPay, plus a reconciliation of every stored claim and payment against the written rules. One command, exit code 0/1/2, expected amounts read from the rules at run time. |
 | [docs/ai-log.md](docs/ai-log.md) | How AI tools were used on this repo, including an independent review and what it found |
 
 ## API
@@ -107,7 +107,7 @@ Pact's own OpenAPI-style response checking is deliberately not used here. The co
 
 ## Where this stands
 
-Stage 1 is built; what was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Stage 2 is in progress: the Python release check is in, the SQL reconciliation and the CI job are next.
+Stage 1 is built; what was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Stage 2 is in progress: the Python release check and the SQL reconciliation are in; the CI job is next.
 
 ## License
 

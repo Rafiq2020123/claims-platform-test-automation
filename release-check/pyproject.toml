@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "claimpay-release-check"
 version = "0.1.0"
-description = "Release checks for a running ClaimPay: API behaviour against the written rules"
+description = "Release checks for ClaimPay: API behaviour and database reconciliation against the written rules"
 requires-python = ">=3.11"
-dependencies = ["requests>=2.31"]
+dependencies = ["requests>=2.31", "psycopg[binary]>=3.1"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
