@@ -125,14 +125,10 @@ def claim_pays_the_documented_amount(ctx: Context, example: WorkedExample) -> No
     that comes out must be the one in the table, not whatever the app computed."""
     member = _enrol_and_sign_in(ctx, f"row{example.row}", example.plan)
     code = _first_procedure_code(ctx)
-    claim = expect(
-        ctx.api.submit_claim(member, code, ctx.today, example.approved_cents), 201, "submit claim"
-    )
+    claim = expect(ctx.api.submit_claim(member, code, ctx.today, example.approved_cents), 201, "submit claim")
     claim_id = claim.field("id")
     decided = expect(
-        ctx.api.decide(
-            ctx.adjuster_token, claim_id, {"decision": "APPROVE", "approvedCents": example.approved_cents}
-        ),
+        ctx.api.decide(ctx.adjuster_token, claim_id, {"decision": "APPROVE", "approvedCents": example.approved_cents}),
         200,
         "approve claim",
     )
@@ -158,9 +154,9 @@ def replaying_a_payment_does_not_pay_twice(ctx: Context) -> None:
     example = next(e for e in ctx.examples if e.payment_cents > 0)
     member = _enrol_and_sign_in(ctx, "replay", example.plan)
     code = _first_procedure_code(ctx)
-    claim_id = expect(
-        ctx.api.submit_claim(member, code, ctx.today, example.approved_cents), 201, "submit claim"
-    ).field("id")
+    claim_id = expect(ctx.api.submit_claim(member, code, ctx.today, example.approved_cents), 201, "submit claim").field(
+        "id"
+    )
     expect(
         ctx.api.decide(ctx.adjuster_token, claim_id, {"decision": "APPROVE", "approvedCents": example.approved_cents}),
         200,

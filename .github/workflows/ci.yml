@@ -173,6 +173,76 @@ jobs:
         if: always()
         run: node scripts/failed-summary.mjs test-results/results.json
 
+  # Stage 2: the Python release check and its SQL reconciliation, run the way a release engineer
+  # would: against a started app and its database. It has to pass on a healthy build and, in the
+  # same job, fail for the right reason against the planted rounding defect.
+  release-check:
+    name: Release check (Python + SQL)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: claimpay
+          POSTGRES_PASSWORD: claimpay
+          POSTGRES_DB: claimpay
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U claimpay"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+    env:
+      DATABASE_URL: postgres://claimpay:claimpay@localhost:5432/claimpay
+      AUTH_SECRET: ci-only-secret-not-for-anything-real-0000
+      SEED_PASSWORD: claimpay-demo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - name: Install the release check
+        run: pip install -e "release-check[dev]" ruff
+      - name: Lint and format (ruff)
+        run: |
+          ruff check release-check scripts/expect-defect-caught.py --config release-check/pyproject.toml
+          ruff format --check release-check scripts/expect-defect-caught.py --config release-check/pyproject.toml
+      - name: Its own tests, including planted bad records in the database
+        working-directory: release-check
+        run: python -m pytest
+      - name: Start the app
+        run: ./scripts/start-app.sh
+      - name: Release check on a healthy build
+        run: |
+          claimpay-release-check --json release-check.json | tee release-check.txt
+          { echo '### Release check, healthy build'; echo '```'; cat release-check.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Restart the app with the planted rounding defect
+        run: DEMO_DEFECT=payment-rounding ./scripts/start-app.sh
+      - name: The same check must now fail, for the right reason
+        run: |
+          python scripts/expect-defect-caught.py release-check-defect.json | tee release-check-defect.txt
+          { echo '### Release check, planted defect (expected to fail)'; echo '```'; cat release-check-defect.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Results and app log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-check
+          path: |
+            release-check*.json
+            release-check*.txt
+            app.log
+          retention-days: 30
+
   app-smoke:
     name: App starts in Docker
     runs-on: ubuntu-latest

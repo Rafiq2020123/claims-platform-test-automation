@@ -13,6 +13,7 @@ in one pass, in the language the data team will read. Python drives it and repor
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -184,9 +185,7 @@ def _describe(rows: list[dict[str, Any]], limit: int = 3) -> str:
     return "; ".join(shown) + more
 
 
-def run_reconciliations(
-    conn: psycopg.Connection, plans: dict[str, Plan]
-) -> list[tuple[str, Callable[[], None]]]:
+def run_reconciliations(conn: psycopg.Connection, plans: dict[str, Plan]) -> list[tuple[str, Callable[[], None]]]:
     """Return the reconciliation checks as (name, callable) pairs so the normal runner can
     time and report them beside the API checks. A connection is passed in rather than a URL
     so a test can run them inside its own transaction and see uncommitted rows."""
@@ -207,15 +206,11 @@ def run_reconciliations(
 
         return check
 
-    return [("plans table matches the rules document", plan_check)] + [
-        (rec.name, make(rec)) for rec in RECONCILIATIONS
-    ]
+    return [("plans table matches the rules document", plan_check)] + [(rec.name, make(rec)) for rec in RECONCILIATIONS]
 
 
 def reconcile(database_url: str, plans: dict[str, Plan]) -> list[CheckResult]:
     """Open a read-only connection and run every reconciliation. Used by the CLI."""
-    import time
-
     results: list[CheckResult] = []
     with psycopg.connect(database_url) as conn:
         conn.read_only = True

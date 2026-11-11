@@ -52,8 +52,9 @@ The app listens on `127.0.0.1` whether it runs natively or through Compose, wher
 | [docs/investigations/001-payment-mismatch.md](docs/investigations/001-payment-mismatch.md) | A failure followed from the test report, through the correlation ID, to the server log and the database row. A constructed scenario, with real output. |
 | [docs/decisions.md](docs/decisions.md) | Choices someone might have made differently, and why they went this way. |
 | [docs/check-record.md](docs/check-record.md) | What was verified before Stage 1 was called done, including what is still not tested. |
+| [docs/check-record-stage-2.md](docs/check-record-stage-2.md) | The same for Stage 2, the release check. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Fresh checkout to a useful new test, and what to do when one fails. |
-| [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI on every pull request: typecheck, lint, format, unit, API, contract and Playwright tests against a real Postgres, Docker start-up check. The Playwright report is kept as an artifact; flaky tests are listed in the job summary. |
+| [.github/workflows/ci.yml](.github/workflows/ci.yml) | CI on every pull request: typecheck, lint, format, unit, API, contract and Playwright tests against a real Postgres, the Python release check (passing on a healthy build, failing on the planted defect), Docker start-up check. The Playwright report is kept as an artifact; flaky tests are listed in the job summary. |
 | [.github/workflows/demo-defect.yml](.github/workflows/demo-defect.yml) | Run by hand: the Playwright suite against the planted rounding defect. Expected to fail, with the two amount tests named in the job summary. |
 | [release-check/](release-check/) | Stage 2, in Python and SQL: the checks a release engineer runs against a deployed ClaimPay, plus a reconciliation of every stored claim and payment against the written rules. One command, exit code 0/1/2, expected amounts read from the rules at run time. |
 | [docs/ai-log.md](docs/ai-log.md) | How AI tools were used on this repo, including an independent review and what it found |
@@ -107,7 +108,7 @@ Pact's own OpenAPI-style response checking is deliberately not used here. The co
 
 ## Where this stands
 
-Stage 1 is built; what was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Stage 2 is in progress: the Python release check and the SQL reconciliation are in; the CI job is next.
+Stage 1 is built; what was verified, and what is still not tested, is in [docs/check-record.md](docs/check-record.md). Stage 2 is built: a Python release check with SQL reconciliation, run in CI against a healthy build and against the planted defect on every pull request. What was verified is in [docs/check-record-stage-2.md](docs/check-record-stage-2.md).
 
 ## License
 

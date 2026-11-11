@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from .checks import CheckResult
 
@@ -36,7 +36,7 @@ def as_json(results: list[CheckResult], base_url: str) -> str:
     return json.dumps(
         {
             "baseUrl": base_url,
-            "ranAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "ranAt": datetime.now(UTC).isoformat(timespec="seconds"),
             "passed": all(r.passed for r in results),
             "checks": [asdict(r) for r in results],
         },

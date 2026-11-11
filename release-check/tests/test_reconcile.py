@@ -80,7 +80,16 @@ def plant_paid_claim(conn, *, plan: str, approved: int, amount: int) -> tuple[st
             """INSERT INTO payments (claim_id, idempotency_key, amount_cents, approved_cents,
                                      coverage_bp, copay_cents, recorded_by, correlation_id)
                VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
-            (claim, f"planted-{uuid.uuid4()}", amount, approved, terms["coverage_bp"], terms["copay_cents"], adjuster, cid),
+            (
+                claim,
+                f"planted-{uuid.uuid4()}",
+                amount,
+                approved,
+                terms["coverage_bp"],
+                terms["copay_cents"],
+                adjuster,
+                cid,
+            ),
         )
         return str(claim), str(cur.fetchone()["id"])
 
@@ -123,9 +132,7 @@ def test_a_payment_on_an_unpaid_claim_is_caught(conn, plans):
 def test_a_history_that_skips_a_step_is_caught(conn, plans):
     claim, _ = plant_paid_claim(conn, plan="GOLD", approved=10000, amount=9000)
     # Remove the APPROVED row: the chain now reads SUBMITTED -> (gap) -> PAID.
-    conn.execute(
-        "DELETE FROM claim_status_history WHERE claim_id = %s AND to_status = 'APPROVED'", (claim,)
-    )
+    conn.execute("DELETE FROM claim_status_history WHERE claim_id = %s AND to_status = 'APPROVED'", (claim,))
     failure = failure_of(
         checks_by_name(conn, plans)["every status change in the history is an allowed move, in an unbroken chain"]
     )

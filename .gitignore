@@ -14,3 +14,9 @@ blob-report/
 __pycache__/
 .venv/
 .playwright/
+
+# release check, when run from the repo root
+app.pid
+app.log
+release-check*.json
+release-check*.txt
